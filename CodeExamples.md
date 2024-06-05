@@ -1,128 +1,101 @@
-Eg 
-string ::= "\" characters "\""`
+ **Declaración de variables de tipos básicos**
 ```
-"HelloWorld"
-```
-Identifier ::= /[a-zA-Z_$][0-9a-zA-Z_$]*/
-```
-myVariable1
-```
-role ::=  role_name ":" role_type
-```
- Samuel:DV
-```
-roles ::= ”RS” “{” role ("," role)* “}”
-```
-roles {
+// Declaración de una variable entera
+Int: age = 25;
 
-    SM : "Alice" ,
+// Declaración de una variable de punto flotante
+Float: height = 1.75;
 
-    PO : "Bob",
+// Declaración de una variable booleana
+Bool: isStudent = True;
 
-    DV : "Charlie" ,
-
-    DV:  "Dave",
-
-    QA : "Eve"
-}
-```
-userStory ::= "US" userStoryID "{" 
-
-UserStoryFormatBlock
-
- "}"
-```
-"US-1" { 
-	T:"Implement login",
-	TY:"Feature",
-	PS:"Diego",
-	DS:"Create login functionality",
-	ET:3,
-	AC:"Login works successfully"
-	}
-```
-loop ::= "for" "(" acceptedData"in" iterable ")" "{" block "}"
-```
-for (DV in Roles) { 
-	block 
-}
+// Declaración de una variable de cadena
+String: name = "Sam";
 ```
 
-statement ::= roles | userStories | conditional | loop | method
+**Declaración de variables con expresiones**
 ```
-for (DV in Roles) { userStories }
-```
+// Declaración de una variable con una expresión aritmética
+Int: result = 10 + 5 * 2;
+
+// Declaración de una variable con una expresión condicional
+Bool: isAdult = (age >= 18);
+
+// Declaración de una variable con una función de llamada
+Int: totalSum = sum(5, 10);
 
 ```
-roles {
+ **Definición de funciones y llamadas a funciones**
 
-    SM : "Alice" ,
+```
+// Definición de función que suma dos números 
+fun sum(Int: x, Int: y) { 
+	x + y; 
+	} 
 
-    PO : "Bob",
+// Llamada a la función con argumentos 
+sum(5, 3);
+```
 
-    DV : "Charlie" ,
+**Expresiones condicionales**
+```
+// Definición de función que determina si un número es positivo, negativo
+fun checkNumber(Int: n) { 
+	if (n > 0) { 
+	"Positive"; 
+	} else { 
+	 "Negative"; 
+	} 
 
-    DV:  "Dave",
+ // Llamada a la función 
+ checkNumber(-5);
+```
 
-    QA : "Eve"
+**Bucles y listas**
+```
+// Definición de una lista de enteros 
+list<Int> myList = <1, 2, 3, 4, 5>; 
+
+// Bucle que itera sobre la lista y suma los elementos 
+fun sumList(list<Int>: myList) { 
+	Int: sum = 0; 
+	for (item in myList) {
+		sum = sum + item; 
+		} 
+		sum; 
 }
 
-// Definición de User Stories
+// Llamada a la función 
+sumList(myList);
+```
 
-userStories {
+**Definición y uso de user stories y roles**
 
-    US "US1" {
-
-        T: "Implement login feature",
-
-        TY: Feature,
-
-        PS: DV : "Charlie"
-
-        DS: "As a user, I want to log in to access my account.",
-
-        ET: 5,
-
-        AC: "User can log in successfully",
-
-        UST: "Design", "Development", "Testing"
-
-    },
-
-    US "US2" {
-
-        T: "Fix login bug",
-
-        TY: Fix,
-
-        PS: QA : "Eve",
-        
-        DS: "Fix the bug in the login feature.",
-
-        ET: 3,
-
-        AC: "User can log in without errors",
-
-        UST: "Debugging", "Testing"
-
-    }
-
+```
+// Definición de roles
+RS {
+  SM: "Diego Figueroa",
+  PO: "Leonardo Espada",
+  TM: "Samuel Escalera"
 }
 
-
-// Método personalizado para asignación aleatoria
-
-funct assignRandom {
-
-    for (userStory in UserStories) {
-
-        if (userStory.PS == "") {
-
-            userStory.PS = roles[randomInt(0, len(roles)-1)]
-
-        }
-
-    }
-
+// Definición de user stories
+US "US1" {
+  T: "Login Feature",
+  TY: "Feature",
+  PS: (SM: "Diego Figueroa"),
+  DS: "As a user, I want to be able to log in so that I can access my account.",
+  ET: 5,
+  AC: "User can log in using username and password"
 }
+
+US "US2" {
+  T: "Fix login bug",
+  TY: "Fix",
+  PS: (TM: "Developer1"),
+  DS: "Fix the login bug that prevents users from logging in.",
+  ET: 3,
+  AC: "Bug is fixed and users can log in without issues"
+}
+
 ```
