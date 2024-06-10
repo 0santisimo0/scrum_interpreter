@@ -9,5 +9,5 @@ import CodeGenerator
 main :: IO ()
 main = do 
     input <- readFile "text.jef"
-    putStrLn input
-    putStrLn "hola mundo"
+    let token = scanner input
+    print token
