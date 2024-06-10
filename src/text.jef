@@ -2,6 +2,6 @@
 
 True
 
-var variable2 = 5
+: variable2= 5
 
-var variable3 = True
+: variable3= True

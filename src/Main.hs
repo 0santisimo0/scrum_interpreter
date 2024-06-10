@@ -11,3 +11,5 @@ main = do
     input <- readFile "text.jef"
     let token = scanner input
     print token
+    -- tree <- parseIO pVariableLiteral token
+    -- print tree
