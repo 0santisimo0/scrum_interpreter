@@ -30,14 +30,3 @@ parseExpression = try parseAssign <|> parseLiteralExpression
 
 parseProgram :: Parser [Expression]
 parseProgram = sepBy parseExpression (many1 space <|> many1 newline)
-
-parserComparison :: Parser Comparison
-parserComparison = Comp <$> parseExpression <*> parserCompOperator <*> parseExpression
-
-parserCompOperator :: Parser CompOperator
-parserCompOperator = (Equal <$ string "==")
-                  <|>(NotEqual <$ string "/=")
-                  <|>(Less <$ string "<")
-                  <|>(LessEqual <$ string "<=")
-                  <|>(Greater <$ string ">")
-                  <|>(GreaterEqual <$ string ">=")
