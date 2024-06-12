@@ -1,10 +1,38 @@
-module AST(Expression(..), Identifier) where 
+module AST(Expression(..), Identifier, Literal(..)) where 
 
 data Program = Program
 
 
 data Expression = Assign Identifier Expression
-                | Value Int
+                | Literal Literal
+                | FunctionCall String [Expression]
+                | Conditional BoolExpression Expression Expression 
                 deriving(Show, Eq)
 
 type Identifier = String 
+
+data Literal = BooleanLiteral Bool
+             | IntegerLiteral Int
+             | FloatingPointLiteral Double
+             | StringLiteral String
+             deriving (Eq, Show)
+
+data BoolExpression = BooleanTerm
+                    | BoolOp BoolExpression BoolOperator BooleanTerm deriving (Eq, Show)
+
+data BooleanTerm = BoolFactor
+                 | BoolTerm BoolOperator BoolFactor deriving (Eq, Show)
+
+data BoolFactor = Comparison
+                | Not BoolFactor deriving (Eq, Show)
+
+data Comparison = Comp Expression CompOperator Expression deriving (Eq, Show)
+
+data BoolOperator = And | Or deriving (Eq, Show)
+
+data CompOperator = Equal
+                  | NotEqual
+                  | Less
+                  | LessEqual
+                  | Greater
+                  | GreaterEqual deriving (Eq, Show)
