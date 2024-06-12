@@ -1,31 +1,65 @@
 module Parser (parseProgram) where
 
-import AST
+import AST as AST
 import Text.Parsec
 import Text.Parsec.String
+
 
 
 parseIdentifier :: Parser Identifier
 parseIdentifier = many1 letter
 
 
+parseNumberLiteral :: Parser Literal
+parseNumberLiteral = try parseAsFloatingPoint <|> parseAsInteger
+  where
+    parseAsFloatingPoint = do
+      intPart <- many1 digit
+      fracPart <- many1 digit
+      return $ FloatingPointLiteral (read (intPart ++ "." ++ fracPart))
+
+    parseAsInteger = do
+      intPart <- many1 digit
+      return $ IntegerLiteral (read intPart)
+
+
+stringChain :: Parser String
+stringChain = char '"' *> many (noneOf "\"") <* char '"'
 
 parseLiteral :: Parser Literal
-parseLiteral = parseBoolLiteral <|> parseIntLiteral <|> parseFloatLiteral <|> parseStringLiteral
+parseLiteral = try parseBoolLiteral <|> parseNumberLiteral <|> parseStringLiteral
   where
     parseBoolLiteral = (BooleanLiteral True <$ string "true") <|> (BooleanLiteral False <$ string "false")
-    parseIntLiteral = IntegerLiteral . read <$> many1 digit
-    parseFloatLiteral = FloatingPointLiteral . read <$> ((++) <$> many1 digit <*> ((:) <$> char '.' <*> many1 digit))
-    parseStringLiteral = StringLiteral <$> (char '"' *> many (noneOf "\"") <* char '"')
+    parseStringLiteral = StringLiteral <$> stringChain
+
+
+parseRoleExp :: Parser Role
+parseRoleExp = parseRoleWithPrefix '>' ["SM", "PO", "TM"]
+
+parseRoleWithPrefix :: Char -> [String] -> Parser Role
+parseRoleWithPrefix prefix roleNames = do
+  char prefix
+  roleName <- choice (map string roleNames)
+  spaces
+  case roleName of
+    "SM" -> ScrumMaster <$> stringChain
+    "PO" -> ProductOwner <$> stringChain
+    "TM" -> TeamMember <$> stringChain
+    _    -> undefined 
 
 
 
 parseExpression :: Parser Expression
-parseExpression = try parseAssign <|> parseLiteralExpression
+parseExpression = try parseFunctionCall <|> parseLiteralExpression <|> parseRole <|> parseAssign
   where
     parseAssign = Assign <$> (parseIdentifier <* spaces <* string ":=" <* spaces) <*> (Literal <$> parseLiteral)
     parseLiteralExpression = Literal <$> parseLiteral
-
+    parseRole = Role <$> parseRoleExp
+    parseFunctionCall = do
+        funcName <- parseIdentifier
+        spaces
+        args <- between (char '(') (char ')') (parseExpression `sepBy` (char ',' >> spaces))
+        return $ FunctionCall funcName args
 
 
 parseProgram :: Parser [Expression]
