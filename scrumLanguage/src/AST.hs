@@ -1,4 +1,4 @@
-module AST(Expression(..), Identifier, Literal(..)) where 
+module AST(Expression(..), Identifier, Literal(..), Comparison(..), CompOperator(..)) where 
 
 data Program = Program
 
@@ -16,7 +16,7 @@ data Literal = BooleanLiteral Bool
              | FloatingPointLiteral Double
              | StringLiteral String
              deriving (Eq, Show)
-
+{-
 data BoolExpression = BooleanTerm
                     | BoolOp BoolExpression BoolOperator BooleanTerm deriving (Eq, Show)
 
@@ -27,7 +27,7 @@ data BooleanTerm = BoolFactor
 data BoolFactor = Comparison
                 | Not BoolFactor 
                 deriving (Eq, Show)
-
+-}
 data Comparison = Comp Expression CompOperator Expression 
                 deriving (Eq, Show)
 
