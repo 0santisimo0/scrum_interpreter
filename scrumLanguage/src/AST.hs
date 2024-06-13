@@ -1,47 +1,77 @@
-module AST(Expression(..), Identifier, Literal(..), Role(..)) where 
+module AST(Expression(..), 
+            Identifier, 
+            Literal(..), 
+            Role(..)) 
+        where 
 
 data Program = Expression deriving(Show, Eq)
 
-
-data Expression = Assign Identifier Expression
-                | Role Role
-                | Literal Literal
-                | FunctionCall String [Expression]
-                | Conditional BoolExpression Expression Expression 
-                deriving(Show, Eq)
-
 type Identifier = String 
+type Variable = Identifier
 
-data Role = ScrumMaster String
-          | ProductOwner String
-          | TeamMember String
-          deriving(Show, Eq)
+data NumType  = Int | Double deriving(Show, Eq)
 
 data Literal = BooleanLiteral Bool
-             | IntegerLiteral Int
-             | FloatingPointLiteral Double
-             | StringLiteral String
-             deriving (Eq, Show)
+            | IntegerLiteral Int
+            | FloatingPointLiteral Double
+            | StringLiteral String
+            deriving(Show, Eq)
 
-data BoolExpression = BooleanTerm
-                    | BoolOp BoolExpression BoolOperator BooleanTerm deriving (Eq, Show)
-
-data BooleanTerm = BoolFactor
-                 | BoolTerm BoolOperator BoolFactor deriving (Eq, Show)
-
-data BoolFactor = Comparison
-                | Not BoolFactor deriving (Eq, Show)
-
-data Comparison = Comp Expression CompOperator Expression deriving (Eq, Show)
-
-data BoolOperator = And | Or deriving (Eq, Show)
+data Expression = Assign Identifier Expression
+                | Literal Literal
+                | Variable Variable
+                | Conditional Conditional
+                | BinaryExpression BinaryExpression
+                | Role Role
+                | UserStory UserStory
+                | FunctionCall String [Expression]
+                deriving(Show, Eq)
 
 data CompOperator = Equal
-                  | NotEqual
-                  | Less
-                  | LessEqual
-                  | Greater
-                  | GreaterEqual deriving (Eq, Show)
+                | NotEqual
+                | Less
+                | LessEqual
+                | Greater
+                | GreaterEqual 
+                deriving(Show, Eq)
 
+data Comparison = Comp Expression CompOperator Expression deriving(Show, Eq)
 
+data Conditional = Comparison Expression Expression deriving(Show, Eq)
 
+data BinaryExpression = NumType BinaryOperator NumType deriving(Show, Eq)
+
+data BinaryOperator = Add    
+                | Sub   
+                | Mul   
+                | Div   
+                deriving (Show, Eq)
+
+data ListExpression = ListExpr Identifier Literal
+                    | ConsExpr Identifier Literal ListExpression
+                    deriving (Show, Eq)
+
+data ForLoop = Identifier ListExpression Expression deriving (Show, Eq)
+
+data Role = ScrumMaster String
+            | ProductOwner String
+            | TeamMember String
+            deriving(Show, Eq)
+
+data UserStory = UserStoryID UserStoryFormatBlock deriving(Show, Eq)
+
+data UserStoryFormatBlock = Title UserStoryType AssignedTo Description Estimation Acceptance deriving(Show, Eq)
+
+data UserStoryType = Feature String
+                    | Spike String
+                    | POC String
+                    | Fix String
+                    | HotFix String
+                    deriving(Show, Eq)
+
+type UserStoryID = Int
+type Title = String
+type AssignedTo = Role
+type Description = String
+type Estimation = Int
+type Acceptance = String

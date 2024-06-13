@@ -1,0 +1,72 @@
+// Basicos
+digit ::= [0-9]
+alphabet ::= [a-zA-Z]
+string ::= alphabet [ alphabet | digit | "_" | "$" ]
+int ::= digit*
+float ::= int "." digit+
+identifier ::= string
+boolean ::= "Ture" | "False"
+variable ::= identifier
+num ::= int | float
+
+//Expresiones
+program ::= expression
+
+expression ::= assign
+        | literal
+        | variable
+        | conditional
+        | binary_expression
+        | user_story 
+        | role
+        
+assign ::= identifier ":=" expression
+
+literal ::= boolean
+        | int
+        | float
+        | string
+
+comparison_operator ::= "==" | "/=" | "<" | ">" | "<=" | ">="
+
+comparison ::= expression comparison_operator expression
+
+// Condicional
+conditional ::= "if" "(" comparison ")" "{" expression "}" "else" "{" expression "}"
+
+// Binary Expression
+binary_expression ::= num binary_operator num
+binary_operator ::= "+"
+            | "-"
+            | "*"
+            | "/"
+//List
+list ::= identifier "<" element ("," element)* ">"
+element ::= literal
+
+//Loop
+for_loop ::= "for" "(" identifier "in" iterable ")" "{" expression "}"
+iterable ::= list
+
+//Roles
+role ::= role_type ":" role_name
+role_name ::= string
+role_type ::= "SM" 
+        | "PO" 
+        | "TM" 
+
+// US
+user_story ::= "US" user_story_id "{" user_story_format_block "}" 
+
+user_story_format_block ::= "T" title ","
+                            "TY" ":" user_story_type ","
+                            "PS" ":"  "(" assigned_to ")" "," 
+                            "DS" ":" description ","
+                            "ET" ":" estimation ","
+                            "AC" ":" acceptance
+title ::= string
+user_story_type ::= "Feature" | "Spike" | "POC" | "Fix" | "HotFix" 
+assigned_to  ::= role
+description ::= string
+estimation ::= int
+acceptance ::= string
