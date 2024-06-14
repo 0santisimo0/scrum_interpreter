@@ -3,46 +3,6 @@ module Parser (parseProgram) where
 import AST as AST
 import Text.Parsec
 import Text.Parsec.String
-import Text.Parsec.Token
-import Text.Parsec.Language
-
-
-languageDef :: LanguageDef st
-languageDef = emptyDef
-  { commentStart    = "/*"
-  , commentEnd      = "*/"
-  , commentLine     = "//"
-  , nestedComments  = True
-  , identStart      = letter
-  , identLetter     = alphaNum <|> oneOf "_'"
-  , opStart         = opLetter emptyDef
-  , opLetter        = oneOf ":!#$%&*+./<=>?@\\^|-~"
-  , reservedNames   = ["BEGIN", "END"]
-  , reservedOpNames = ["+", "-", "*", "/", ":=", "==", "<", ">", "<=", ">="]
-  , caseSensitive   = True
-  }
-
-
-lexer:: TokenParser st
-lexer = makeTokenParser languageDef
-
-
-int:: Parser Integer
-int = Text.Parsec.Token.integer lexer
-
-
-parens :: Parser a -> Parser a
-parens= Text.Parsec.Token.parens lexer
-
-whiteSpaces = Text.Parsec.Token.whiteSpace lexer
-
-reservedOps :: String -> Parser()
-reservedOps = Text.Parsec.Token.reservedOp lexer
-
--- reservedNmaes :: String -> Parser()
--- reservedNames 
-
-plusSign = whiteSpaces <* reservedOps "+" *> whiteSpaces
 
 
 parseIdentifier :: Parser Identifier
@@ -75,6 +35,7 @@ parseLiteral = try parseBoolLiteral <|> parseNumberLiteral <|> parseStringLitera
 parseRoleExp :: Parser Role
 parseRoleExp = parseRoleWithPrefix '>' ["SM", "PO", "TM"]
 
+
 parseRoleWithPrefix :: Char -> [String] -> Parser Role
 parseRoleWithPrefix prefix roleNames = do
   _ <- char prefix
@@ -89,7 +50,6 @@ parseRoleWithPrefix prefix roleNames = do
 
 parseAssignSymbol :: Parser ()
 parseAssignSymbol = spaces <* string ":=" <* spaces
-
 
 
 parseExpression :: Parser Expression
