@@ -1,4 +1,8 @@
-module Parser(parseExpression
+module Parser(parseExpression,
+              reservedOp,
+              parseFloat,
+              parseInteger,
+              parseLiteral
     ) where
 
 import AST
