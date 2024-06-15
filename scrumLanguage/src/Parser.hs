@@ -1,4 +1,4 @@
-module Parser where
+module Parser(parseLiteral) where
 
 import AST
 import Text.Parsec
@@ -24,20 +24,20 @@ languageDef = emptyDef
 lexer :: P.TokenParser st
 lexer = P.makeTokenParser languageDef
 
-identifier :: Parser String
-identifier = P.identifier lexer
+parseIdentifier :: Parser String
+parseIdentifier = P.identifier lexer
 
-integer :: Parser Integer
-integer = P.integer lexer
+parseInteger :: Parser Integer
+parseInteger = P.integer lexer
 
-float :: Parser Double
-float = P.float lexer
+parseFloat :: Parser Double
+parseFloat = P.float lexer
 
-boolean :: Parser Bool
-boolean = (reserved "True" >> return True) <|> (reserved "False" >> return False)
+parseBoolean :: Parser Bool
+parseBoolean = (reserved "True" >> return True) <|> (reserved "False" >> return False)
 
-stringLiteral :: Parser String
-stringLiteral = P.stringLiteral lexer
+parseStringLiteral :: Parser String
+parseStringLiteral = P.stringLiteral lexer
 
 reserved :: String -> Parser ()
 reserved = P.reserved lexer
@@ -53,3 +53,9 @@ braces = P.braces lexer
 
 commaSep :: Parser a -> Parser [a]
 commaSep = P.commaSep lexer
+
+parseLiteral :: Parser Literal
+parseLiteral = try (FloatingPointLiteral <$> parseFloat)
+      <|> (IntegerLiteral . fromIntegral <$> parseInteger)
+      <|> (BooleanLiteral <$> parseBoolean)
+      <|> (StringLiteral <$> parseStringLiteral)
