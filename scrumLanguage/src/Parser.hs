@@ -1,69 +1,55 @@
-module Parser (parseProgram) where
+module Parser where
 
-import AST as AST
+import AST
 import Text.Parsec
 import Text.Parsec.String
+import Text.Parsec.Language
+import qualified Text.Parsec.Token as P
 
+languageDef :: LanguageDef st
+languageDef = emptyDef
+  { P.commentStart    = "/*"
+  , P.commentEnd      = "*/"
+  , P.commentLine     = "//"
+  , P.nestedComments  = True
+  , P.identStart      = letter
+  , P.identLetter     = alphaNum <|> oneOf "_$"
+  , P.opStart         = P.opLetter languageDef
+  , P.opLetter        = oneOf ":=<>+-*/"
+  , P.reservedNames   = ["if", "else", "True", "False", "for", "in", "SM", "PO", "TM", "US"]
+  , P.reservedOpNames = [":=", "+", "-", "*", "/", "==", "/=", "<", ">", "<=", ">="]
+  , P.caseSensitive   = True
+  }
 
-parseIdentifier :: Parser Identifier
-parseIdentifier = many1 letter
+lexer :: P.TokenParser st
+lexer = P.makeTokenParser languageDef
 
+identifier :: Parser String
+identifier = P.identifier lexer
 
-parseNumberLiteral :: Parser Literal
-parseNumberLiteral = try parseAsFloatingPoint <|> parseAsInteger
-  where
-    parseAsFloatingPoint = do
-      intPart <- many1 digit
-      fracPart <- many1 digit
-      return $ FloatingPointLiteral (read (intPart ++ "." ++ fracPart))
+integer :: Parser Integer
+integer = P.integer lexer
 
-    parseAsInteger = do
-      intPart <- many1 digit
-      return $ IntegerLiteral (read intPart)
+float :: Parser Double
+float = P.float lexer
 
+boolean :: Parser Bool
+boolean = (reserved "True" >> return True) <|> (reserved "False" >> return False)
 
-stringChain :: Parser String
-stringChain = char '"' *> many (noneOf "\"") <* char '"'
+stringLiteral :: Parser String
+stringLiteral = P.stringLiteral lexer
 
-parseLiteral :: Parser Literal
-parseLiteral = try parseBoolLiteral <|> parseNumberLiteral <|> parseStringLiteral
-  where
-    parseBoolLiteral = (BooleanLiteral True <$ string "true") <|> (BooleanLiteral False <$ string "false")
-    parseStringLiteral = StringLiteral <$> stringChain
+reserved :: String -> Parser ()
+reserved = P.reserved lexer
 
+reservedOp :: String -> Parser ()
+reservedOp = P.reservedOp lexer
 
-parseRoleExp :: Parser Role
-parseRoleExp = parseRoleWithPrefix '>' ["SM", "PO", "TM"]
+parens :: Parser a -> Parser a
+parens = P.parens lexer
 
+braces :: Parser a -> Parser a
+braces = P.braces lexer
 
-parseRoleWithPrefix :: Char -> [String] -> Parser Role
-parseRoleWithPrefix prefix roleNames = do
-  _ <- char prefix
-  roleName <- choice (map string roleNames)
-  spaces
-  case roleName of
-    "SM" -> ScrumMaster <$> stringChain
-    "PO" -> ProductOwner <$> stringChain
-    "TM" -> TeamMember <$> stringChain
-    _    -> undefined 
-
-
-parseAssignSymbol :: Parser ()
-parseAssignSymbol = spaces <* string ":=" <* spaces
-
-
-parseExpression :: Parser Expression
-parseExpression = try parseFunctionCall <|> parseLiteralExpression <|> parseRole <|> parseAssign
-  where
-    parseAssign = Assign <$> (parseIdentifier <* parseAssignSymbol) <*> (Literal <$> parseLiteral)
-    parseLiteralExpression = Literal <$> parseLiteral
-    parseRole = Role <$> parseRoleExp
-    parseFunctionCall = do
-        funcName <- parseIdentifier
-        spaces
-        args <- between (char '(') (char ')') (parseExpression `sepBy` (char ',' >> spaces))
-        return $ FunctionCall funcName args
-
-
-parseProgram :: Parser [Expression]
-parseProgram = sepBy parseExpression (many1 space <|> many1 newline)
+commaSep :: Parser a -> Parser [a]
+commaSep = P.commaSep lexer
