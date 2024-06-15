@@ -18,7 +18,7 @@ data Literal = BooleanLiteral Bool
             deriving(Show, Eq)
 
 data Expression = Assign Identifier Expression
-                | Literal Literal
+                | LiteralExpr Literal
                 | Variable Variable
                 | Conditional Conditional
                 | BinaryExpression BinaryExpression

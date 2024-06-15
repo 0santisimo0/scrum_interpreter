@@ -1,4 +1,5 @@
-module Parser(parseLiteral) where
+module Parser(parseExpression
+    ) where
 
 import AST
 import Text.Parsec
@@ -59,3 +60,16 @@ parseLiteral = try (FloatingPointLiteral <$> parseFloat)
       <|> (IntegerLiteral . fromIntegral <$> parseInteger)
       <|> (BooleanLiteral <$> parseBoolean)
       <|> (StringLiteral <$> parseStringLiteral)
+
+parseVariable :: Parser Expression
+parseVariable = Variable <$> parseIdentifier
+
+parseAssign :: Parser Expression
+parseAssign = Assign
+    <$> parseIdentifier
+    <*> (reservedOp ":=" *> parseExpression)
+
+parseExpression :: Parser Expression
+parseExpression = try parseAssign
+        <|> (LiteralExpr <$> parseLiteral)
+        <|> try parseVariable
