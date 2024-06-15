@@ -1,8 +1,10 @@
-module Parser(parseExpression,
-              reservedOp,
-              parseFloat,
-              parseInteger,
-              parseLiteral
+module Parser (
+    parseExpression,
+    reservedOp,
+    parseFloat,
+    parseInteger,
+    parseLiteral,
+    parseProgram
     ) where
 
 import AST
@@ -10,6 +12,8 @@ import Text.Parsec
 import Text.Parsec.String
 import Text.Parsec.Language
 import qualified Text.Parsec.Token as P
+import Control.Monad (void)
+import Data.List (intercalate)
 
 languageDef :: LanguageDef st
 languageDef = emptyDef
@@ -77,3 +81,8 @@ parseExpression :: Parser Expression
 parseExpression = try parseAssign
         <|> (LiteralExpr <$> parseLiteral)
         <|> try parseVariable
+
+parseProgram :: Parser [Expression]
+parseProgram = whiteSpace *> parseExpression `endBy` (void $ many $ oneOf "\n\r") <* eof
+  where
+    whiteSpace = P.whiteSpace lexer

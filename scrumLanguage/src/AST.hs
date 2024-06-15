@@ -39,7 +39,7 @@ data Comparison = Comp Expression CompOperator Expression deriving(Show, Eq)
 
 data Conditional = Comparison Expression Expression deriving(Show, Eq)
 
-data BinaryExpression = IntBinExpr Literal BinaryOperator Literal
+data BinaryExpression = BinExpr Literal BinaryOperator Literal
                     deriving (Show, Eq)
 
 data BinaryOperator = Add    

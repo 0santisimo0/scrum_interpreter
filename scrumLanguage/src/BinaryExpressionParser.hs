@@ -14,8 +14,8 @@ parseBinaryOperator = (reservedOp "+" >> return Add)
             <|> (reservedOp "/" >> return Div)
 
 parseBinaryExpression :: Parser Expression
-parseBinaryExpression = do
-    left <-  try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)
-    op <- parseBinaryOperator
-    right <- try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)
-    return $ BinaryExpression (IntBinExpr left op right)
+parseBinaryExpression =
+    (try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)) >>= \leftValue ->
+    parseBinaryOperator >>= \operator ->
+    (try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)) >>= \rightValue ->
+    return $ BinaryExpression (BinExpr leftValue operator rightValue)
