@@ -4,7 +4,10 @@ module Parser (
     parseFloat,
     parseInteger,
     parseLiteral,
-    parseProgram
+    parseProgram,
+    parseIdentifier,
+    parseStringLiteral,
+    reserved
     ) where
 
 import AST
