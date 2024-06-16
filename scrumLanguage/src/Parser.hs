@@ -8,6 +8,7 @@ module Parser (
     parseIdentifier,
     parseStringLiteral,
     parseRole,
+    parseListExpression,
     reserved
     ) where
 
@@ -94,6 +95,14 @@ parseBinaryExpression =
     (try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)) >>= \rightValue ->
     return $ BinaryExpression (BinExpr leftValue operator rightValue)
 
+parseElement :: Parser Literal
+parseElement = parseLiteral
+
+parseListExpression :: Parser Expression
+parseListExpression = ListExpression <$> (ListExpr <$> parseIdentifier <*> (reservedOp "<" 
+                      *> parseElement `sepBy` reservedOp "," 
+                      <* reservedOp ">"))
+
 parseRole :: Parser Role
 parseRole = (reserved "SM" *> spaces *> char ':'  *> spaces >> ScrumMaster <$> parseStringLiteral)
     <|> (reserved "PO"  *> spaces *> char ':'  *> spaces >> ProductOwner <$> parseStringLiteral)
@@ -101,6 +110,7 @@ parseRole = (reserved "SM" *> spaces *> char ':'  *> spaces >> ScrumMaster <$> p
 
 parseExpression :: Parser Expression
 parseExpression = try parseAssign
+        <|> try parseListExpression
         <|> try parseBinaryExpression
         <|> (LiteralExpr <$> parseLiteral)
         <|> try parseVariable

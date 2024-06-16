@@ -17,6 +17,8 @@ expression ::= assign
         | variable
         | conditional
         | binary_expression
+        | list
+        | for_loop
         | user_story 
         | role
         
