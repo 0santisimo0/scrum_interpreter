@@ -1,6 +1,8 @@
 module AST(Expression(..), 
             Identifier, 
             Literal(..), 
+            BinaryOperator(..),
+            BinaryExpression(..),
             Role(..)) 
         where 
 
@@ -9,16 +11,14 @@ data Program = Expression deriving(Show, Eq)
 type Identifier = String 
 type Variable = Identifier
 
-data NumType  = Int | Double deriving(Show, Eq)
-
 data Literal = BooleanLiteral Bool
-            | IntegerLiteral Int
+            | IntegerLiteral Integer
             | FloatingPointLiteral Double
             | StringLiteral String
             deriving(Show, Eq)
 
 data Expression = Assign Identifier Expression
-                | Literal Literal
+                | LiteralExpr Literal
                 | Variable Variable
                 | Conditional Conditional
                 | BinaryExpression BinaryExpression
@@ -39,7 +39,8 @@ data Comparison = Comp Expression CompOperator Expression deriving(Show, Eq)
 
 data Conditional = Comparison Expression Expression deriving(Show, Eq)
 
-data BinaryExpression = NumType BinaryOperator NumType deriving(Show, Eq)
+data BinaryExpression = BinExpr Literal BinaryOperator Literal
+                    deriving (Show, Eq)
 
 data BinaryOperator = Add    
                 | Sub   

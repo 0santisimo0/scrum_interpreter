@@ -1,69 +1,111 @@
-module Parser (parseProgram) where
+module Parser (
+    parseExpression,
+    reservedOp,
+    parseFloat,
+    parseInteger,
+    parseLiteral,
+    parseProgram,
+    parseIdentifier,
+    parseStringLiteral,
+    parseRole,
+    reserved
+    ) where
 
-import AST as AST
+import AST
 import Text.Parsec
 import Text.Parsec.String
+import Text.Parsec.Language
+import qualified Text.Parsec.Token as P
+import Control.Monad (void)
+import Data.List (intercalate)
 
+languageDef :: LanguageDef st
+languageDef = emptyDef
+  { P.commentStart    = "/*"
+  , P.commentEnd      = "*/"
+  , P.commentLine     = "//"
+  , P.nestedComments  = True
+  , P.identStart      = letter
+  , P.identLetter     = alphaNum <|> oneOf "_$"
+  , P.opStart         = P.opLetter languageDef
+  , P.opLetter        = oneOf ":=<>+-*/"
+  , P.reservedNames   = ["if", "else", "True", "False", "for", "in", "SM", "PO", "TM", "US"]
+  , P.reservedOpNames = [":=", "+", "-", "*", "/", "==", "/=", "<", ">", "<=", ">="]
+  , P.caseSensitive   = True
+  }
 
-parseIdentifier :: Parser Identifier
-parseIdentifier = many1 letter
+lexer :: P.TokenParser st
+lexer = P.makeTokenParser languageDef
 
+parseIdentifier :: Parser String
+parseIdentifier = P.identifier lexer
 
-parseNumberLiteral :: Parser Literal
-parseNumberLiteral = try parseAsFloatingPoint <|> parseAsInteger
-  where
-    parseAsFloatingPoint = do
-      intPart <- many1 digit
-      fracPart <- many1 digit
-      return $ FloatingPointLiteral (read (intPart ++ "." ++ fracPart))
+parseInteger :: Parser Integer
+parseInteger = P.integer lexer
 
-    parseAsInteger = do
-      intPart <- many1 digit
-      return $ IntegerLiteral (read intPart)
+parseFloat :: Parser Double
+parseFloat = P.float lexer
 
+parseBoolean :: Parser Bool
+parseBoolean = (reserved "True" >> return True) <|> (reserved "False" >> return False)
 
-stringChain :: Parser String
-stringChain = char '"' *> many (noneOf "\"") <* char '"'
+parseStringLiteral :: Parser String
+parseStringLiteral = P.stringLiteral lexer
+
+reserved :: String -> Parser ()
+reserved = P.reserved lexer
+
+reservedOp :: String -> Parser ()
+reservedOp = P.reservedOp lexer
+
+parens :: Parser a -> Parser a
+parens = P.parens lexer
+
+braces :: Parser a -> Parser a
+braces = P.braces lexer
+
+commaSep :: Parser a -> Parser [a]
+commaSep = P.commaSep lexer
 
 parseLiteral :: Parser Literal
-parseLiteral = try parseBoolLiteral <|> parseNumberLiteral <|> parseStringLiteral
-  where
-    parseBoolLiteral = (BooleanLiteral True <$ string "true") <|> (BooleanLiteral False <$ string "false")
-    parseStringLiteral = StringLiteral <$> stringChain
+parseLiteral = try (FloatingPointLiteral <$> parseFloat)
+      <|> (IntegerLiteral . fromIntegral <$> parseInteger)
+      <|> (BooleanLiteral <$> parseBoolean)
+      <|> (StringLiteral <$> parseStringLiteral)
 
+parseVariable :: Parser Expression
+parseVariable = Variable <$> parseIdentifier
 
-parseRoleExp :: Parser Role
-parseRoleExp = parseRoleWithPrefix '>' ["SM", "PO", "TM"]
+parseAssign :: Parser Expression
+parseAssign = Assign
+    <$> parseIdentifier
+    <*> (reservedOp ":=" *> parseExpression)
 
+parseBinaryOperator :: Parser BinaryOperator
+parseBinaryOperator = (reservedOp "+" >> return Add)
+            <|> (reservedOp "-" >> return Sub)
+            <|> (reservedOp "*" >> return Mul)
+            <|> (reservedOp "/" >> return Div)
 
-parseRoleWithPrefix :: Char -> [String] -> Parser Role
-parseRoleWithPrefix prefix roleNames = do
-  _ <- char prefix
-  roleName <- choice (map string roleNames)
-  spaces
-  case roleName of
-    "SM" -> ScrumMaster <$> stringChain
-    "PO" -> ProductOwner <$> stringChain
-    "TM" -> TeamMember <$> stringChain
-    _    -> undefined 
+parseBinaryExpression :: Parser Expression
+parseBinaryExpression =
+    (try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)) >>= \leftValue ->
+    parseBinaryOperator >>= \operator ->
+    (try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)) >>= \rightValue ->
+    return $ BinaryExpression (BinExpr leftValue operator rightValue)
 
-
-parseAssignSymbol :: Parser ()
-parseAssignSymbol = spaces <* string ":=" <* spaces
-
+parseRole :: Parser Role
+parseRole = (reserved "SM" *> spaces *> char ':'  *> spaces >> ScrumMaster <$> parseStringLiteral)
+    <|> (reserved "PO"  *> spaces *> char ':'  *> spaces >> ProductOwner <$> parseStringLiteral)
+    <|> (reserved "TM"  *> spaces *> char ':'  *> spaces >> TeamMember <$> parseStringLiteral)
 
 parseExpression :: Parser Expression
-parseExpression = try parseFunctionCall <|> parseLiteralExpression <|> parseRole <|> parseAssign
-  where
-    parseAssign = Assign <$> (parseIdentifier <* parseAssignSymbol) <*> (Literal <$> parseLiteral)
-    parseLiteralExpression = Literal <$> parseLiteral
-    parseRole = Role <$> parseRoleExp
-    parseFunctionCall = do
-        funcName <- parseIdentifier
-        spaces
-        args <- between (char '(') (char ')') (parseExpression `sepBy` (char ',' >> spaces))
-        return $ FunctionCall funcName args
-
+parseExpression = try parseAssign
+        <|> try parseBinaryExpression
+        <|> (LiteralExpr <$> parseLiteral)
+        <|> try parseVariable
 
 parseProgram :: Parser [Expression]
-parseProgram = sepBy parseExpression (many1 space <|> many1 newline)
+parseProgram = whiteSpace *> parseExpression `endBy` (void $ many $ oneOf "\n\r") <* eof
+  where
+    whiteSpace = P.whiteSpace lexer
