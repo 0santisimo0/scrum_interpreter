@@ -1,4 +1,4 @@
-module Parser (parseProgram) where
+module Parsers.Parser (parseProgram) where
 
 import AST as AST
 import Text.Parsec
@@ -45,7 +45,7 @@ parseRoleWithPrefix prefix roleNames = do
     "SM" -> ScrumMaster <$> stringChain
     "PO" -> ProductOwner <$> stringChain
     "TM" -> TeamMember <$> stringChain
-    _    -> undefined 
+    _    -> undefined
 
 
 parseAssignSymbol :: Parser ()
@@ -53,16 +53,46 @@ parseAssignSymbol = spaces <* string ":=" <* spaces
 
 
 parseExpression :: Parser Expression
-parseExpression = try parseFunctionCall <|> parseLiteralExpression <|> parseRole <|> parseAssign
+parseExpression = try parseFunctionCall 
+              <|> try parseLiteralExpression 
+              <|> try parseRole 
+              <|> try parseAssign 
+              <|> parseConditional
   where
     parseAssign = Assign <$> (parseIdentifier <* parseAssignSymbol) <*> (Literal <$> parseLiteral)
     parseLiteralExpression = Literal <$> parseLiteral
     parseRole = Role <$> parseRoleExp
     parseFunctionCall = do
+        _ <- char ':'
         funcName <- parseIdentifier
         spaces
         args <- between (char '(') (char ')') (parseExpression `sepBy` (char ',' >> spaces))
         return $ FunctionCall funcName args
+        
+
+parseComparison :: Parser Comparison
+parseComparison = Comp <$> parseExpression <*> parseCompOperator <*> parseExpression
+
+parseCompOperator :: Parser CompOperator
+parseCompOperator = (Equal <$ string "==")
+                  <|>(NotEqual <$ string "/=")
+                  <|>(Less <$ string "<")
+                  <|>(LessEqual <$ string "<=")
+                  <|>(Greater <$ string ">")
+                  <|>(GreaterEqual <$ string ">=")
+
+
+parseConditional :: Parser Expression
+parseConditional = do
+  _ <- string "if" *> spaces *> char '('
+  condition <- parseComparison
+  _ <- char ')' *> spaces *> char '{'
+  ifExpr <- parseExpression
+  _ <- char '}' *> spaces *> string "else" *> spaces *> char '{'
+  elseExpr <- parseExpression
+  _ <- char '}'
+  return $ Conditional condition ifExpr elseExpr
+
 
 
 parseProgram :: Parser [Expression]

@@ -1,7 +1,7 @@
 module Lib( someFunc ) where
 
 import Text.Parsec
-import Parser as P
+import Parsers.Parser as P
 
 
 someFunc :: IO ()
