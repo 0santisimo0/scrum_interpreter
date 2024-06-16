@@ -7,6 +7,7 @@ module Parser (
     parseProgram,
     parseIdentifier,
     parseStringLiteral,
+    parseRole,
     reserved
     ) where
 
@@ -80,8 +81,27 @@ parseAssign = Assign
     <$> parseIdentifier
     <*> (reservedOp ":=" *> parseExpression)
 
+parseBinaryOperator :: Parser BinaryOperator
+parseBinaryOperator = (reservedOp "+" >> return Add)
+            <|> (reservedOp "-" >> return Sub)
+            <|> (reservedOp "*" >> return Mul)
+            <|> (reservedOp "/" >> return Div)
+
+parseBinaryExpression :: Parser Expression
+parseBinaryExpression =
+    (try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)) >>= \leftValue ->
+    parseBinaryOperator >>= \operator ->
+    (try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)) >>= \rightValue ->
+    return $ BinaryExpression (BinExpr leftValue operator rightValue)
+
+parseRole :: Parser Role
+parseRole = (reserved "SM" *> spaces *> char ':'  *> spaces >> ScrumMaster <$> parseStringLiteral)
+    <|> (reserved "PO"  *> spaces *> char ':'  *> spaces >> ProductOwner <$> parseStringLiteral)
+    <|> (reserved "TM"  *> spaces *> char ':'  *> spaces >> TeamMember <$> parseStringLiteral)
+
 parseExpression :: Parser Expression
 parseExpression = try parseAssign
+        <|> try parseBinaryExpression
         <|> (LiteralExpr <$> parseLiteral)
         <|> try parseVariable
 

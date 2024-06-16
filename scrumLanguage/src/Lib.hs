@@ -2,12 +2,20 @@ module Lib( someFunc ) where
 
 import Text.Parsec
 import Parser as P
-import BinaryExpressionParser as PB
-import RoleParser as PR
-
 
 someFunc :: IO ()
 someFunc = do
-    content <- readFile "./resources/code.qs"
-    let result = parse (PR.parseRole) "./resources/code.qs" content
-    print result
+    literals <- readFile "./resources/Literals.qs"
+    let literalsResults = parse (P.parseProgram) "./resources/Literals.qs" literals
+    print "Literals Parse"
+    print literalsResults
+
+    variableAssign <- readFile "./resources/VariableAssign.qs"
+    let variableResults = parse (P.parseProgram) "./resources/VariableAssign.qs" variableAssign
+    print "VariableAssign Parse"
+    print variableResults
+
+    binaryOperator <- readFile "./resources/BinaryOperator.qs"
+    let binaryOperatorResults = parse (P.parseProgram) "./resources/BinaryOperator.qs" binaryOperator
+    print "BinaryOperator Parse"
+    print binaryOperatorResults
