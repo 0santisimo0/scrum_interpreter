@@ -88,10 +88,23 @@ parseBinaryExpression =
 parseElement :: Parser Literal
 parseElement = parseLiteral
 
+sameType :: [Literal] -> Bool
+sameType [] = True
+sameType (x:xs) = all (== getType x) (map getType xs)
+  where
+    getType :: Literal -> String
+    getType (BooleanLiteral _) = "Boolean"
+    getType (IntegerLiteral _) = "Integer"
+    getType (FloatingPointLiteral _) = "Float"
+    getType (StringLiteral _) = "String"
+
 parseListExpression :: Parser Expression
-parseListExpression = ListExpression <$> (ListExpr <$> parseIdentifier <*> (reservedOp "<" 
-                      *> parseElement `sepBy` reservedOp "," 
-                      <* reservedOp ">"))
+parseListExpression =
+    parseIdentifier >>= \id ->
+    (reservedOp "<" *> parseElement `sepBy` reservedOp "," <* reservedOp ">") >>= \elems ->
+    if sameType elems
+        then return $ ListExpression (ListExpr id elems)
+        else fail "All elements in the list must be of the same type"
 
 parseForLoop :: Parser Expression
 parseForLoop = 
