@@ -3,6 +3,8 @@ module AST(Expression(..),
             Literal(..), 
             BinaryOperator(..),
             BinaryExpression(..),
+            ListExpression(..),
+            ForLoop(..),
             Role(..)) 
         where 
 
@@ -22,6 +24,8 @@ data Expression = Assign Identifier Expression
                 | Variable Variable
                 | Conditional Conditional
                 | BinaryExpression BinaryExpression
+                | ListExpression ListExpression
+                | ForLoopExpression ForLoop
                 | Role Role
                 | UserStory UserStory
                 | FunctionCall String [Expression]
@@ -48,11 +52,11 @@ data BinaryOperator = Add
                 | Div   
                 deriving (Show, Eq)
 
-data ListExpression = ListExpr Identifier Literal
-                    | ConsExpr Identifier Literal ListExpression
+data ListExpression = ListExpr Identifier [Literal]
                     deriving (Show, Eq)
 
-data ForLoop = Identifier ListExpression Expression deriving (Show, Eq)
+data ForLoop = ForLoop Expression Expression Expression
+                deriving (Show, Eq)
 
 data Role = ScrumMaster String
             | ProductOwner String

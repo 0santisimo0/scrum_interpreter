@@ -1,14 +1,5 @@
 module Parser (
-    parseExpression,
-    reservedOp,
-    parseFloat,
-    parseInteger,
-    parseLiteral,
-    parseProgram,
-    parseIdentifier,
-    parseStringLiteral,
-    parseRole,
-    reserved
+    parseProgram
     ) where
 
 import AST
@@ -94,6 +85,37 @@ parseBinaryExpression =
     (try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)) >>= \rightValue ->
     return $ BinaryExpression (BinExpr leftValue operator rightValue)
 
+parseElement :: Parser Literal
+parseElement = parseLiteral
+
+sameType :: [Literal] -> Bool
+sameType [] = True
+sameType (x:xs) = all (== getType x) (map getType xs)
+  where
+    getType :: Literal -> String
+    getType (BooleanLiteral _) = "Boolean"
+    getType (IntegerLiteral _) = "Integer"
+    getType (FloatingPointLiteral _) = "Float"
+    getType (StringLiteral _) = "String"
+
+parseListExpression :: Parser Expression
+parseListExpression =
+    parseIdentifier >>= \id ->
+    (reservedOp "<" *> parseElement `sepBy` reservedOp "," <* reservedOp ">") >>= \elems ->
+    if sameType elems
+        then return $ ListExpression (ListExpr id elems)
+        else fail "All elements in the list must be of the same type"
+
+parseIterable :: Parser Expression
+parseIterable = try parseListExpression <|> parseVariable
+
+parseForLoop :: Parser Expression
+parseForLoop = 
+    reserved "for" *> 
+    parens ((,) <$> parseAssign <*> (reserved "in" *> parseIterable)) >>= \(var, iterable) ->
+    braces parseExpression >>= \body ->
+    return $ ForLoopExpression (ForLoop var iterable body)
+
 parseRole :: Parser Role
 parseRole = (reserved "SM" *> spaces *> char ':'  *> spaces >> ScrumMaster <$> parseStringLiteral)
     <|> (reserved "PO"  *> spaces *> char ':'  *> spaces >> ProductOwner <$> parseStringLiteral)
@@ -101,6 +123,8 @@ parseRole = (reserved "SM" *> spaces *> char ':'  *> spaces >> ScrumMaster <$> p
 
 parseExpression :: Parser Expression
 parseExpression = try parseAssign
+        <|> try parseForLoop
+        <|> try parseListExpression
         <|> try parseBinaryExpression
         <|> (LiteralExpr <$> parseLiteral)
         <|> try parseVariable

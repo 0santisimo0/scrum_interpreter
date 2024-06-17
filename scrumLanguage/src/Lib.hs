@@ -19,3 +19,8 @@ someFunc = do
     let binaryOperatorResults = parse (P.parseProgram) "./resources/BinaryOperator.qs" binaryOperator
     print "BinaryOperator Parse"
     print binaryOperatorResults
+
+    forLoop <- readFile "./resources/ForLoop.qs"
+    let forLoopResults = parse (P.parseProgram) "./resources/ForLoop.qs" forLoop
+    print "ForLoop Parse"
+    print forLoopResults
