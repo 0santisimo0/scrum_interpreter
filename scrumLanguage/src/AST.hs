@@ -3,17 +3,19 @@ module AST(Expression(..),
             Literal(..), 
             Role(..),
             Comparison(..),
-            CompOperator(..)) 
+            CompOperator(..),
+            BinaryOperator(..),
+            BinaryExpression(..),
+            ListExpression(..),
+            ForLoop(..)) 
         where 
 
 data Program = Expression deriving(Show, Eq)
 
 type Identifier = String 
 
-data NumType  = Int | Double deriving(Show, Eq)
-
 data Literal = BooleanLiteral Bool
-            | IntegerLiteral Int
+            | IntegerLiteral Integer
             | FloatingPointLiteral Double
             | StringLiteral String
             deriving(Show, Eq)
@@ -25,6 +27,8 @@ data Expression = Assign Identifier Expression
                 | Conditional Comparison [Expression] [Expression]
                 | Function String [String] [Expression]
                 | BinaryExpression BinaryExpression
+                | ListExpression ListExpression
+                | ForLoopExpression ForLoop
                 | Role Role
                 | ReturnStatement Expression
                 | UserStory UserStory
@@ -43,7 +47,8 @@ data CompOperator = Equal
 data Comparison = Comp Expression CompOperator Expression
                 deriving (Show, Eq)
 
-data BinaryExpression = NumType BinaryOperator NumType deriving(Show, Eq)
+data BinaryExpression = BinExpr Literal BinaryOperator Literal
+                    deriving (Show, Eq)
 
 data BinaryOperator = Add    
                 | Sub   
@@ -51,11 +56,11 @@ data BinaryOperator = Add
                 | Div   
                 deriving (Show, Eq)
 
-data ListExpression = ListExpr Identifier Literal
-                    | ConsExpr Identifier Literal ListExpression
+data ListExpression = ListExpr Identifier [Literal]
                     deriving (Show, Eq)
 
-data ForLoop = Identifier ListExpression Expression deriving (Show, Eq)
+data ForLoop = ForLoop Expression Expression Expression
+                deriving (Show, Eq)
 
 data Role = ScrumMaster String
             | ProductOwner String

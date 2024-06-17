@@ -1,4 +1,4 @@
-module Parsers.Parser (parseProgram) where
+module Parsers.ParserCopyDontErrase (parseProgram) where
 
 import AST as AST
 import Text.Parsec

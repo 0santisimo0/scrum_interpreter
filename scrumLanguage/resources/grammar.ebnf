@@ -17,6 +17,8 @@ expression ::= assign
         | variable
         | conditional
         | binary_expression
+        | list
+        | for_loop
         | user_story 
         | role
         
@@ -45,7 +47,7 @@ list ::= identifier "<" element ("," element)* ">"
 element ::= literal
 
 //Loop
-for_loop ::= "for" "(" identifier "in" iterable ")" "{" expression "}"
+for_loop ::= "for" "(" assign "in" iterable ")" "{" expression "}"
 iterable ::= list
 
 //Roles
