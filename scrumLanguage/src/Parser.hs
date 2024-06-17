@@ -1,5 +1,6 @@
 module Parser (
-    parseProgram
+    parseProgram,
+    parseUserStory
     ) where
 
 import AST
@@ -20,7 +21,9 @@ languageDef = emptyDef
   , P.identLetter     = alphaNum <|> oneOf "_$"
   , P.opStart         = P.opLetter languageDef
   , P.opLetter        = oneOf ":=<>+-*/"
-  , P.reservedNames   = ["if", "else", "True", "False", "for", "in", "SM", "PO", "TM", "US"]
+  , P.reservedNames   = ["if", "True", "False", "for", "in", "SM", "PO", "TM", "US",
+                        "Feature", "Spike", "POC", "Fix", "HotFix",
+                        "T", "TY", "PS", "DS", "ET", "AC"]
   , P.reservedOpNames = [":=", "+", "-", "*", "/", "==", "/=", "<", ">", "<=", ">="]
   , P.caseSensitive   = True
   }
@@ -57,6 +60,9 @@ braces = P.braces lexer
 
 commaSep :: Parser a -> Parser [a]
 commaSep = P.commaSep lexer
+
+whiteSpace :: Parser ()
+whiteSpace = P.whiteSpace lexer
 
 parseLiteral :: Parser Literal
 parseLiteral = try (FloatingPointLiteral <$> parseFloat)
@@ -121,6 +127,30 @@ parseRole = (reserved "SM" *> spaces *> char ':'  *> spaces >> ScrumMaster <$> p
     <|> (reserved "PO"  *> spaces *> char ':'  *> spaces >> ProductOwner <$> parseStringLiteral)
     <|> (reserved "TM"  *> spaces *> char ':'  *> spaces >> TeamMember <$> parseStringLiteral)
 
+parseUserStoryType :: Parser UserStoryType
+parseUserStoryType =  try (reserved "Feature" *> (return Feature))
+                    <|> try (reserved "Spike" *> (return Spike))
+                    <|> try (reserved "POC" *> (return POC))
+                    <|> try (reserved "Fix" *> (return Fix))
+                    <|> try (reserved "HotFix" *> (return HotFix))
+
+parseUserStoryFormatBlock :: Parser UserStoryFormatBlock
+parseUserStoryFormatBlock = UserStoryFormatBlock
+    <$> (reserved "T" *> char ':' *> whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
+    <*> (reserved "TY" *> char ':' *>  whiteSpace *> parseUserStoryType <* char ',' <* whiteSpace)
+    <*> (reserved "PS" *> char ':' *> whiteSpace *> char '(' *>   parseRole <* char ')' <* char ','<* whiteSpace)
+    <*> (reserved "DS" *> char ':' *>  whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
+    <*> (reserved "ET" *> char ':' *>  whiteSpace *> parseInteger<* char ',' <* whiteSpace)
+    <*> (reserved "AC" *> char ':' *>  whiteSpace *> parseStringLiteral)
+
+parseUserStory :: Parser Expression
+parseUserStory =
+    UserStory <$> ( reserved "US" *> 
+        ( UserStoryExpr 
+        <$>parseStringLiteral
+        <*> (char '{' *> whiteSpace *>  parseUserStoryFormatBlock <* whiteSpace <* char '}'
+        )))
+
 parseExpression :: Parser Expression
 parseExpression = try parseAssign
         <|> try parseForLoop
@@ -131,5 +161,3 @@ parseExpression = try parseAssign
 
 parseProgram :: Parser [Expression]
 parseProgram = whiteSpace *> parseExpression `endBy` (void $ many $ oneOf "\n\r") <* eof
-  where
-    whiteSpace = P.whiteSpace lexer

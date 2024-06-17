@@ -60,7 +60,7 @@ role_type ::= "SM"
 // US
 user_story ::= "US" user_story_id "{" user_story_format_block "}" 
 
-user_story_format_block ::= "T" title ","
+user_story_format_block ::= "T" ":" title ","
                             "TY" ":" user_story_type ","
                             "PS" ":"  "(" assigned_to ")" "," 
                             "DS" ":" description ","

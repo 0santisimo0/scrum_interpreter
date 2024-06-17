@@ -24,3 +24,8 @@ someFunc = do
     let forLoopResults = parse (P.parseProgram) "./resources/ForLoop.qs" forLoop
     print "ForLoop Parse"
     print forLoopResults
+
+    us <- readFile "./resources/US.qs"
+    let usResults = parse (P.parseUserStory) "./resurces/US.qs" us
+    print "US Parse"
+    print usResults
