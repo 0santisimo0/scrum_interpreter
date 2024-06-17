@@ -106,10 +106,13 @@ parseListExpression =
         then return $ ListExpression (ListExpr id elems)
         else fail "All elements in the list must be of the same type"
 
+parseIterable :: Parser Expression
+parseIterable = try parseListExpression <|> parseVariable
+
 parseForLoop :: Parser Expression
 parseForLoop = 
     reserved "for" *> 
-    parens ((,) <$> parseAssign <*> (reserved "in" *> parseListExpression)) >>= \(var, iterable) ->
+    parens ((,) <$> parseAssign <*> (reserved "in" *> parseIterable)) >>= \(var, iterable) ->
     braces parseExpression >>= \body ->
     return $ ForLoopExpression (ForLoop var iterable body)
 
