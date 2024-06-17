@@ -1,15 +1,5 @@
 module Parser (
-    parseExpression,
-    reservedOp,
-    parseFloat,
-    parseInteger,
-    parseLiteral,
-    parseProgram,
-    parseIdentifier,
-    parseStringLiteral,
-    parseRole,
-    parseListExpression,
-    reserved
+    parseProgram
     ) where
 
 import AST
@@ -103,6 +93,13 @@ parseListExpression = ListExpression <$> (ListExpr <$> parseIdentifier <*> (rese
                       *> parseElement `sepBy` reservedOp "," 
                       <* reservedOp ">"))
 
+parseForLoop :: Parser Expression
+parseForLoop = 
+    reserved "for" *> 
+    parens ((,) <$> parseAssign <*> (reserved "in" *> parseListExpression)) >>= \(var, iterable) ->
+    braces parseExpression >>= \body ->
+    return $ ForLoopExpression (ForLoop var iterable body)
+
 parseRole :: Parser Role
 parseRole = (reserved "SM" *> spaces *> char ':'  *> spaces >> ScrumMaster <$> parseStringLiteral)
     <|> (reserved "PO"  *> spaces *> char ':'  *> spaces >> ProductOwner <$> parseStringLiteral)
@@ -110,6 +107,7 @@ parseRole = (reserved "SM" *> spaces *> char ':'  *> spaces >> ScrumMaster <$> p
 
 parseExpression :: Parser Expression
 parseExpression = try parseAssign
+        <|> try parseForLoop
         <|> try parseListExpression
         <|> try parseBinaryExpression
         <|> (LiteralExpr <$> parseLiteral)

@@ -55,8 +55,9 @@ data BinaryOperator = Add
 data ListExpression = ListExpr Identifier [Literal]
                     deriving (Show, Eq)
 
-data ForLoop = ForLoop Identifier ListExpression Expression
+data ForLoop = ForLoop Expression Expression Expression
                 deriving (Show, Eq)
+
 data Role = ScrumMaster String
             | ProductOwner String
             | TeamMember String
