@@ -9,7 +9,8 @@ module AST(Expression(..),
             ListExpression(..),
             ForLoop(..),
             UserStoryType(..),
-            UserStoryFormatBlock(..)) 
+            UserStoryFormatBlock(..),
+            UserStory(..)) 
         where 
 
 data Program = Expression deriving(Show, Eq)
@@ -69,20 +70,20 @@ data Role = ScrumMaster String
             | TeamMember String
             deriving(Show, Eq)
 
-data UserStory = UserStoryID UserStoryFormatBlock deriving(Show, Eq)
+data UserStory = UserStoryExpr UserStoryID UserStoryFormatBlock deriving(Show, Eq)
 
-data UserStoryFormatBlock = Title UserStoryType AssignedTo Description Estimation Acceptance deriving(Show, Eq)
+data UserStoryFormatBlock = UserStoryFormatBlock Title UserStoryType AssignedTo Description Estimation Acceptance deriving(Show, Eq)
 
-data UserStoryType = Feature String
-                    | Spike String
-                    | POC String
-                    | Fix String
-                    | HotFix String
+data UserStoryType = Feature 
+                    | Spike 
+                    | POC 
+                    | Fix 
+                    | HotFix 
                     deriving(Show, Eq)
 
-type UserStoryID = Int
+type UserStoryID = String
 type Title = String
 type AssignedTo = Role
 type Description = String
-type Estimation = Int
+type Estimation = Integer
 type Acceptance = String
