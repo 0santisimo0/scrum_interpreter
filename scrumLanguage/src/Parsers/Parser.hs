@@ -142,12 +142,14 @@ parseExpression = try parseFunction
   where
     parseLiteralExpression = Literal <$> parseLiteral
     parseRole = Role <$> parseRoleExp
-    parseFunctionCall = do
-        _ <- char ':'
-        funcName <- parseIdentifier
-        spaces
-        args <- between (char '(') (char ')') (parseExpression `sepBy` (char ',' >> spaces))
-        return $ FunctionCall funcName args
+
+
+parseFunctionCall :: Parser Expression
+parseFunctionCall =
+    FunctionCall
+    <$> (char ':' *> parseIdentifier)
+    <*> (spaces *> between (char '(') (char ')') (parseExpression `sepBy` (char ',' >> spaces)))
+
 
 
 parseRoleExp :: Parser Role
@@ -174,23 +176,18 @@ parseReturn = ReturnStatement <$> (reserved "return" *> spaces *> parseExpressio
 
 
 parseConditional :: Parser Expression
-parseConditional = do
-  _ <- reserved "if" *> spaces *> char '('
-  condition <- parseComparison
-  _ <- char ')' *> spaces *> char '{' *> spaces
-  ifExpr <- parseMultipleExpressions
-  _ <- spaces *> string "else" *> spaces *> char '{' *> spaces
+parseConditional = 
+  reserved "if" *> spaces *> char '(' *> parseComparison <* char ')' <* spaces <* char '{' <* spaces >>= \condition ->
+  parseMultipleExpressions <* spaces <* string "else" <* spaces <* char '{' <* spaces >>= \ifExpr ->
   Conditional condition ifExpr <$> parseMultipleExpressions
 
 
 parseFunction :: Parser Expression
-parseFunction = do
-  _ <- reserved "fun" *> spaces
-  funcName <- parseIdentifier
-  _ <- char '('
-  params <- sepBy1 (many1 letter) (spaces *> char ',' <* spaces)
-  _ <- char ')' *> spaces *> char '{' *> spaces
+parseFunction = 
+  reserved "fun" *> spaces *> parseIdentifier >>= \funcName ->
+  char '(' *> sepBy1 (many1 letter) (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
   Function funcName params <$> parseMultipleExpressions
+
 
 whiteSpace :: Parser ()
 whiteSpace = P.whiteSpace lexer

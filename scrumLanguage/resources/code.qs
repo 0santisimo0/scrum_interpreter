@@ -19,10 +19,12 @@ if (x==5) {
     x:= "watafac"
 } else {
     1
+    "watafac"
+    return 9
 }
 
 
-fun sum(x, y) { 
+fun sum(o, y) { 
    return 5
    x := "Una funcion"
    78
@@ -33,6 +35,6 @@ fun sum(x, y) {
     "string"
    }
 
-   return "string"
+   return x
 
 }
