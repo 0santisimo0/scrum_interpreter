@@ -7,7 +7,9 @@ module AST(Expression(..),
             BinaryOperator(..),
             BinaryExpression(..),
             ListExpression(..),
-            ForLoop(..)) 
+            ForLoop(..),
+            UserStoryType(..),
+            UserStoryFormatBlock(..)) 
         where 
 
 data Program = Expression deriving(Show, Eq)

@@ -196,5 +196,28 @@ parseMultipleExpressions :: Parser [Expression]
 parseMultipleExpressions = manyTill (parseExpression <* whiteSpace) (try (whiteSpace *> char '}'))
 
 
+parseUserStoryType :: Parser UserStoryType
+parseUserStoryType =  try (reserved "Feature" *> (return Feature))
+                    <|> try (reserved "Spike" *> (return Spike))
+                    <|> try (reserved "POC" *> (return POC))
+                    <|> try (reserved "Fix" *> (return Fix))
+                    <|> try (reserved "HotFix" *> (return HotFix))
+
+parseUserStoryFormatBlock :: Parser UserStoryFormatBlock
+parseUserStoryFormatBlock = UserStoryFormatBlock
+    <$> (reserved "T" *> char ':' *> whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
+    <*> (reserved "TY" *> char ':' *>  whiteSpace *> parseUserStoryType <* char ',' <* whiteSpace)
+    <*> (reserved "PS" *> char ':' *> whiteSpace *> char '(' *>   parseRole <* char ')' <* char ','<* whiteSpace)
+    <*> (reserved "DS" *> char ':' *>  whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
+    <*> (reserved "ET" *> char ':' *>  whiteSpace *> parseInteger<* char ',' <* whiteSpace)
+    <*> (reserved "AC" *> char ':' *>  whiteSpace *> parseStringLiteral)
+
+parseUserStory :: Parser Expression
+parseUserStory =
+    UserStory <$> ( reserved "US" *> 
+        ( UserStoryExpr 
+        <$>parseStringLiteral
+        <*> (char '{' *> whiteSpace *>  parseUserStoryFormatBlock <* whiteSpace <* char '}'
+        )))
 parseProgram :: Parser [Expression]
 parseProgram = whiteSpace *> parseExpression `endBy` void (many $ oneOf "\n\r") <* eof
