@@ -56,11 +56,11 @@ stringList<"Hola", "Mundo">
 
 1 + 1
 
-x + y
+x / y
 
 US "POC-01" { 
     T: "Titulo", 
-    TY: POC , 
+    TY: Spike, 
     PS: (TM: "Sam"), 
     DS: "Describcion", 
     ET: 3, 

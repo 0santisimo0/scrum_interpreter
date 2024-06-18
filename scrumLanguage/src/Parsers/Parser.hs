@@ -77,10 +77,11 @@ parseAssign = Assign
 
 
 parseBinaryOperator :: Parser BinaryOperator
-parseBinaryOperator = (reservedOp "+" >> return Add)
-            <|> (reservedOp "-" >> return Sub)
-            <|> (reservedOp "*" >> return Mul)
-            <|> (reservedOp "/" >> return Div)
+parseBinaryOperator = 
+  (Add <$ reservedOp "+")
+  <|> (Sub <$ reservedOp "-")
+  <|> (Mul <$ reservedOp "*")
+  <|> (Div <$ reservedOp "/")
 
 
 parseBinaryExpression :: Parser Expression
@@ -114,24 +115,28 @@ sameType (x:xs) = all ((== getType x) . getType) xs
 
 
 parseListExpression :: Parser Expression
-parseListExpression =
-    parseIdentifier >>= \id ->
-    (reservedOp "<" *> parseElement `sepBy` reservedOp "," <* reservedOp ">") >>= \elems ->
-    if sameType elems
-        then return $ ListExpression (ListExpr id elems)
-        else fail "All elements in the list must be of the same type"
-
+parseListExpression = 
+  (ListExpr <$> 
+    parseIdentifier <* 
+    reservedOp "<" <*> 
+    (parseElement `sepBy` reservedOp ",") <* 
+    reservedOp ">"
+  ) >>= \listExpr ->
+  if sameType (getElements listExpr)
+    then return (ListExpression listExpr)
+    else fail "All elements in the list must be of the same type"
+  where
+    getElements (ListExpr _ elems) = elems
 
 parseIterable :: Parser Expression
 parseIterable = try parseListExpression <|> parseVariable
 
 
 parseForLoop :: Parser Expression
-parseForLoop =
-    reserved "for" *>
-    parens ((,) <$> parseAssign <*> (reserved "in" *> parseIterable)) >>= \(var, iterable) ->
-    braces parseExpression >>= \body ->
-    return $ ForLoopExpression (ForLoop var iterable body)
+parseForLoop = 
+  reserved "for" *> 
+  parens ((,) <$> parseAssign <*> (reserved "in" *> parseIterable)) >>= \(var, iterable) ->
+  ForLoopExpression <$> (ForLoop var iterable <$> braces parseExpression)
 
 
 parseExpression :: Parser Expression
@@ -205,11 +210,13 @@ parseMultipleExpressions = manyTill (parseExpression <* whiteSpace) (try (whiteS
 
 
 parseUserStoryType :: Parser UserStoryType
-parseUserStoryType =  try (reserved "Feature" *> (return Feature))
-                    <|> try (reserved "Spike" *> (return Spike))
-                    <|> try (reserved "POC" *> (return POC))
-                    <|> try (reserved "Fix" *> (return Fix))
-                    <|> try (reserved "HotFix" *> (return HotFix))
+parseUserStoryType = 
+  (Feature <$ reserved "Feature")
+  <|> (Spike <$ reserved "Spike")
+  <|> (POC <$ reserved "POC") 
+  <|> (Fix <$  reserved "Fix")
+  <|> (HotFix <$ reserved "HotFix")
+
 
 parseUserStoryFormatBlock :: Parser UserStoryFormatBlock
 parseUserStoryFormatBlock = UserStoryFormatBlock
