@@ -38,7 +38,7 @@ parseFloat :: Parser Double
 parseFloat = P.float lexer
 
 parseBoolean :: Parser Bool
-parseBoolean = (reserved "True" >> return True) <|> (reserved "False" >> return False)
+parseBoolean = (True <$ reserved "True")  <|> (False <$ reserved "False")
 
 parseStringLiteral :: Parser String
 parseStringLiteral = P.stringLiteral lexer
@@ -84,12 +84,19 @@ parseBinaryOperator = (reservedOp "+" >> return Add)
 
 
 parseBinaryExpression :: Parser Expression
-parseBinaryExpression =
-    (try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)) >>= \leftValue ->
-    parseBinaryOperator >>= \operator ->
-    (try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)) >>= \rightValue ->
-    return $ BinaryExpression (BinExpr leftValue operator rightValue)
-
+parseBinaryExpression = 
+    try (BinaryExpression <$> 
+        (BinExprLit <$> 
+            (try (FloatingPointLiteral <$> parseFloat) 
+            <|> try (IntegerLiteral <$> parseInteger))
+        <*> parseBinaryOperator 
+        <*> (try (FloatingPointLiteral <$> parseFloat) 
+            <|> try (IntegerLiteral <$> parseInteger))))
+    <|> try (BinaryExpression <$>
+        (BinExprId <$>
+            parseIdentifier
+        <*> parseBinaryOperator
+        <*> parseIdentifier))
 
 parseElement :: Parser Literal
 parseElement = parseLiteral
@@ -129,10 +136,11 @@ parseForLoop =
 
 parseExpression :: Parser Expression
 parseExpression = try parseFunction
+              <|> try parseBinaryExpression
               <|> try parseForLoop
               <|> try parseListExpression
-              <|> try parseBinaryExpression
               <|> try parseLiteralExpression
+              <|> try parseUserStory
               <|> try parseRole
               <|> try parseAssign
               <|> try parseConditional

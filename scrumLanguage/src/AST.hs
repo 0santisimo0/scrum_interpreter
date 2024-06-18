@@ -50,8 +50,10 @@ data CompOperator = Equal
 data Comparison = Comp Expression CompOperator Expression
                 deriving (Show, Eq)
 
-data BinaryExpression = BinExpr Literal BinaryOperator Literal
-                    deriving (Show, Eq)
+data BinaryExpression
+    = BinExprLit Literal BinaryOperator Literal
+    | BinExprId Identifier BinaryOperator Identifier
+    deriving (Show, Eq)
 
 data BinaryOperator = Add    
                 | Sub   

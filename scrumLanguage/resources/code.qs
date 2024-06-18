@@ -1,5 +1,6 @@
 x:= 2
-z:= false
+z:= False
+a:= True
 y:= "hola mundo"
 
 6
@@ -55,4 +56,13 @@ stringList<"Hola", "Mundo">
 
 1 + 1
 
-x + 1
+x + y
+
+US "POC-01" { 
+    T: "Titulo", 
+    TY: POC , 
+    PS: (TM: "Sam"), 
+    DS: "Describcion", 
+    ET: 3, 
+    AC: "aaaa"  
+    }
