@@ -1,17 +1,18 @@
 module AST(Expression(..), 
             Identifier, 
             Literal(..), 
+            Role(..),
+            Comparison(..),
+            CompOperator(..),
             BinaryOperator(..),
             BinaryExpression(..),
             ListExpression(..),
-            ForLoop(..),
-            Role(..)) 
+            ForLoop(..)) 
         where 
 
 data Program = Expression deriving(Show, Eq)
 
 type Identifier = String 
-type Variable = Identifier
 
 data Literal = BooleanLiteral Bool
             | IntegerLiteral Integer
@@ -19,17 +20,21 @@ data Literal = BooleanLiteral Bool
             | StringLiteral String
             deriving(Show, Eq)
 
+
 data Expression = Assign Identifier Expression
-                | LiteralExpr Literal
-                | Variable Variable
-                | Conditional Conditional
+                | Literal Literal
+                | Variable Identifier
+                | Conditional Comparison [Expression] [Expression]
+                | Function String [String] [Expression]
                 | BinaryExpression BinaryExpression
                 | ListExpression ListExpression
                 | ForLoopExpression ForLoop
                 | Role Role
+                | ReturnStatement Expression
                 | UserStory UserStory
                 | FunctionCall String [Expression]
                 deriving(Show, Eq)
+
 
 data CompOperator = Equal
                 | NotEqual
@@ -39,9 +44,8 @@ data CompOperator = Equal
                 | GreaterEqual 
                 deriving(Show, Eq)
 
-data Comparison = Comp Expression CompOperator Expression deriving(Show, Eq)
-
-data Conditional = Comparison Expression Expression deriving(Show, Eq)
+data Comparison = Comp Expression CompOperator Expression
+                deriving (Show, Eq)
 
 data BinaryExpression = BinExpr Literal BinaryOperator Literal
                     deriving (Show, Eq)
