@@ -38,7 +38,7 @@ parseFloat :: Parser Double
 parseFloat = P.float lexer
 
 parseBoolean :: Parser Bool
-parseBoolean = (reserved "True" >> return True) <|> (reserved "False" >> return False)
+parseBoolean = (True <$ reserved "True")  <|> (False <$ reserved "False")
 
 parseStringLiteral :: Parser String
 parseStringLiteral = P.stringLiteral lexer
@@ -77,19 +77,27 @@ parseAssign = Assign
 
 
 parseBinaryOperator :: Parser BinaryOperator
-parseBinaryOperator = (reservedOp "+" >> return Add)
-            <|> (reservedOp "-" >> return Sub)
-            <|> (reservedOp "*" >> return Mul)
-            <|> (reservedOp "/" >> return Div)
+parseBinaryOperator = 
+  (Add <$ reservedOp "+")
+  <|> (Sub <$ reservedOp "-")
+  <|> (Mul <$ reservedOp "*")
+  <|> (Div <$ reservedOp "/")
 
 
 parseBinaryExpression :: Parser Expression
-parseBinaryExpression =
-    (try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)) >>= \leftValue ->
-    parseBinaryOperator >>= \operator ->
-    (try (FloatingPointLiteral <$> parseFloat) <|> (IntegerLiteral <$> parseInteger)) >>= \rightValue ->
-    return $ BinaryExpression (BinExpr leftValue operator rightValue)
-
+parseBinaryExpression = 
+    try (BinaryExpression <$> 
+        (BinExprLit <$> 
+            (try (FloatingPointLiteral <$> parseFloat) 
+            <|> try (IntegerLiteral <$> parseInteger))
+        <*> parseBinaryOperator 
+        <*> (try (FloatingPointLiteral <$> parseFloat) 
+            <|> try (IntegerLiteral <$> parseInteger))))
+    <|> try (BinaryExpression <$>
+        (BinExprId <$>
+            parseIdentifier
+        <*> parseBinaryOperator
+        <*> parseIdentifier))
 
 parseElement :: Parser Literal
 parseElement = parseLiteral
@@ -107,32 +115,37 @@ sameType (x:xs) = all ((== getType x) . getType) xs
 
 
 parseListExpression :: Parser Expression
-parseListExpression =
-    parseIdentifier >>= \id ->
-    (reservedOp "<" *> parseElement `sepBy` reservedOp "," <* reservedOp ">") >>= \elems ->
-    if sameType elems
-        then return $ ListExpression (ListExpr id elems)
-        else fail "All elements in the list must be of the same type"
-
+parseListExpression = 
+  (ListExpr <$> 
+    parseIdentifier <* 
+    reservedOp "<" <*> 
+    (parseElement `sepBy` reservedOp ",") <* 
+    reservedOp ">"
+  ) >>= \listExpr ->
+  if sameType (getElements listExpr)
+    then return (ListExpression listExpr)
+    else fail "All elements in the list must be of the same type"
+  where
+    getElements (ListExpr _ elems) = elems
 
 parseIterable :: Parser Expression
 parseIterable = try parseListExpression <|> parseVariable
 
 
 parseForLoop :: Parser Expression
-parseForLoop =
-    reserved "for" *>
-    parens ((,) <$> parseAssign <*> (reserved "in" *> parseIterable)) >>= \(var, iterable) ->
-    braces parseExpression >>= \body ->
-    return $ ForLoopExpression (ForLoop var iterable body)
+parseForLoop = 
+  reserved "for" *> 
+  parens ((,) <$> parseAssign <*> (reserved "in" *> parseIterable)) >>= \(var, iterable) ->
+  ForLoopExpression <$> (ForLoop var iterable <$> braces parseExpression)
 
 
 parseExpression :: Parser Expression
 parseExpression = try parseFunction
+              <|> try parseBinaryExpression
               <|> try parseForLoop
               <|> try parseListExpression
-              <|> try parseBinaryExpression
               <|> try parseLiteralExpression
+              <|> try parseUserStory
               <|> try parseRole
               <|> try parseAssign
               <|> try parseConditional
@@ -196,5 +209,30 @@ parseMultipleExpressions :: Parser [Expression]
 parseMultipleExpressions = manyTill (parseExpression <* whiteSpace) (try (whiteSpace *> char '}'))
 
 
+parseUserStoryType :: Parser UserStoryType
+parseUserStoryType = 
+  (Feature <$ reserved "Feature")
+  <|> (Spike <$ reserved "Spike")
+  <|> (POC <$ reserved "POC") 
+  <|> (Fix <$  reserved "Fix")
+  <|> (HotFix <$ reserved "HotFix")
+
+
+parseUserStoryFormatBlock :: Parser UserStoryFormatBlock
+parseUserStoryFormatBlock = UserStoryFormatBlock
+    <$> (reserved "T" *> char ':' *> whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
+    <*> (reserved "TY" *> char ':' *>  whiteSpace *> parseUserStoryType <* char ',' <* whiteSpace)
+    <*> (reserved "PS" *> char ':' *> whiteSpace *> char '(' *>   parseRoleExp <* char ')' <* char ','<* whiteSpace)
+    <*> (reserved "DS" *> char ':' *>  whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
+    <*> (reserved "ET" *> char ':' *>  whiteSpace *> parseInteger<* char ',' <* whiteSpace)
+    <*> (reserved "AC" *> char ':' *>  whiteSpace *> parseStringLiteral)
+
+parseUserStory :: Parser Expression
+parseUserStory =
+    UserStory <$> ( reserved "US" *> 
+        ( UserStoryExpr 
+        <$>parseStringLiteral
+        <*> (char '{' *> whiteSpace *>  parseUserStoryFormatBlock <* whiteSpace <* char '}'
+        )))
 parseProgram :: Parser [Expression]
 parseProgram = whiteSpace *> parseExpression `endBy` void (many $ oneOf "\n\r") <* eof
