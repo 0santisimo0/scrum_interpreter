@@ -1,7 +1,9 @@
-module Lib( someFunc ) where
+module Lib (someFunc) where
 
 import Text.Parsec
 import Parsers.Parser as P
+import CodeGenerator (generateCode)
+import System.IO (writeFile)
 
 someFunc :: IO ()
 someFunc = do
@@ -25,7 +27,13 @@ someFunc = do
     -- print "ForLoop Parse"
     -- print forLoopResults
 
-    completeExample <- readFile "./resources/code.qs"
-    let forLoopResults = parse (P.parseProgram) "./resources/code.qs" completeExample
+    completeExample <- readFile "./resources/pythonAccepted.qs"
+    let parseResult = parse (P.parseProgram) "./resources/pythonAccepted.qs" completeExample
     putStrLn "COMPLETE EXAMPLE"
-    print forLoopResults
+    print parseResult
+    case parseResult of
+        Left err -> print err
+        Right ast -> do
+            let pythonCode = generateCode ast
+            writeFile "src/test.py" pythonCode
+            putStrLn "Generated test.py"
