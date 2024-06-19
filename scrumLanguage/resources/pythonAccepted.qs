@@ -4,6 +4,14 @@ True
 "Hola"
 
 
+SM : "Santiago Caballero"
+PO : "Samuel Escalera"
+TM : "Jefferson Pelotas"
+TM : "Bryant Mayers"
+TM : "Cristiano Ronaldo"
+TM : "Ronaldiño Gaucho"
+
+
 x:= "hola"
 y:= 89
 

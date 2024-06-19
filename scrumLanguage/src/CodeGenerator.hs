@@ -32,14 +32,20 @@ generateExpression (ForLoopExpression (ForLoop var iterable body)) =
     indent (generateExpression body)
 generateExpression (ReturnStatement e) = "return " ++ generateExpression e
 generateExpression (Conditional cond ifExpr elseExpr) =
-    "if " ++ generateComparison cond ++ ":\n" ++
-    indent (generateExpressions ifExpr) ++ "\nelse:\n" ++
+    "\nif " ++ generateComparison cond ++ ":\n" ++
+    indent (generateExpressions ifExpr) ++ "else:\n" ++
     indent (generateExpressions elseExpr)
 generateExpression (Function name params body) =
     "def " ++ name ++ "(" ++ intercalate ", " params ++ "):\n" ++
     indent (generateExpressions body)
+generateExpression (Role r) = generateRole r
 generateExpression _ = " Error "
 
+
+generateRole :: Role -> String
+generateRole (ScrumMaster sm) = "sm = ScrumMaster(\""++ sm ++ "\") \nmanager.setScrumMaster(sm)"
+generateRole (ProductOwner po) = "po = ProductOwner(\""++ po ++ "\") \nmanager.setProductOwner(sm)"
+generateRole (TeamMember tm) = "manager.addTeamMember(TeamMember(\"" ++ tm ++"\"))"
 
 generateComparison :: Comparison -> String
 generateComparison (Comp left op right) =
@@ -64,4 +70,15 @@ indent = unlines . map ("    " ++) . lines
 
 
 generateCode :: [Expression] -> String
-generateCode = generateExpressions
+generateCode expressions = generateImports ++ generateExpressions expressions
+
+generateImports :: String
+generateImports = unlines
+    [ "from TeamMember import TeamMember"
+    , "from ScrumMaster import ScrumMaster"
+    , "from ProductOwner import ProductOwner"
+    , "from Manager import Manager"
+    , ""
+    , "manager = Manager()"
+    , ""
+    ]
