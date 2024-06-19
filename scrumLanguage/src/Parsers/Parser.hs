@@ -176,12 +176,12 @@ parseComparison = Comp <$> parseExpression <*> parseCompOperator <*> parseExpres
 
 
 parseCompOperator :: Parser CompOperator
-parseCompOperator = (Equal <$ string "==")
-                  <|>(NotEqual <$ string "/=")
-                  <|>(Less <$ string "<")
-                  <|>(LessEqual <$ string "<=")
-                  <|>(Greater <$ string ">")
-                  <|>(GreaterEqual <$ string ">=")
+parseCompOperator = try (Equal <$ string "==")
+                  <|> try (LessEqual <$ string "<=")
+                  <|> try (GreaterEqual <$ string ">=")
+                  <|> try (NotEqual <$ string "/=")
+                  <|> try (Less <$ string "<")
+                  <|> try (Greater <$ string ">")
 
 
 parseReturn :: Parser Expression

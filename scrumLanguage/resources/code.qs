@@ -8,7 +8,7 @@ y
 
 "just a literal"
 
-:foo("o", "x")
+:foo(True, "x")
 
 SM : "Santiago Caballero"
 PO : "Samuel Escalera"
