@@ -13,7 +13,7 @@ else:
     1
     "watafac"
 
-def sum(x y):
+def sum(x, y):
     x = "Una funcion"
     78
     if x == "watafac":
@@ -25,3 +25,4 @@ def sum(x y):
     
     return x
 
+sum(6, y)

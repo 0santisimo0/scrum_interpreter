@@ -22,10 +22,10 @@ someFunc = do
     -- print "BinaryOperator Parse"
     -- print binaryOperatorResults
 
-    -- forLoop <- readFile "./resources/ForLoop.qs"
-    -- let forLoopResults = parse (P.parseProgram) "./resources/ForLoop.qs" forLoop
-    -- print "ForLoop Parse"
-    -- print forLoopResults
+    forLoop <- readFile "./resources/code.qs"
+    let forLoopResults = parse (P.parseProgram) "./resources/code.qs" forLoop
+    print "Parser: "
+    print forLoopResults
 
     completeExample <- readFile "./resources/pythonAccepted.qs"
     let parseResult = parse (P.parseProgram) "./resources/pythonAccepted.qs" completeExample

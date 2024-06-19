@@ -30,3 +30,6 @@ fun sum(x, y) {
    return x
 
 }
+
+
+:sum(6, y)

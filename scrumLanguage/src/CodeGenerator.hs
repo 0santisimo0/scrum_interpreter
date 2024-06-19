@@ -3,15 +3,16 @@ module CodeGenerator (
     ) where
 
 import AST
+import Data.List (intercalate)
 
--- Function to convert a literal to a Python literal
+
 generateLiteral :: Literal -> String
 generateLiteral (IntegerLiteral n) = show n
 generateLiteral (FloatingPointLiteral n) = show n
 generateLiteral (BooleanLiteral b) = if b then "True" else "False"
 generateLiteral (StringLiteral s) = show s
 
--- Function to convert a binary operator to a Python operator
+
 generateBinaryOperator :: BinaryOperator -> String
 generateBinaryOperator Add = "+"
 generateBinaryOperator Sub = "-"
@@ -21,6 +22,7 @@ generateBinaryOperator Div = "/"
 generateExpression :: Expression -> String
 generateExpression (Literal l) = generateLiteral l
 generateExpression (Variable v) = v
+generateExpression (FunctionCall name params) = name ++ "(" ++ intercalate ", " (map generateExpression params) ++ ")"
 generateExpression (Assign v e) = v ++ " = " ++ generateExpression e
 generateExpression (ListExpression (ListExpr id elems)) =
     id ++ " = [" ++ unwords (map generateLiteral elems) ++ "]"
@@ -33,12 +35,15 @@ generateExpression (Conditional cond ifExpr elseExpr) =
     indent (generateExpressions ifExpr) ++ "\nelse:\n" ++
     indent (generateExpressions elseExpr)
 generateExpression (Function name params body) =
-    "def " ++ name ++ "(" ++ unwords params ++ "):\n" ++
+    "def " ++ name ++ "(" ++ intercalate ", " params ++ "):\n" ++
     indent (generateExpressions body)
+generateExpression _ = " Error "
+
 
 generateComparison :: Comparison -> String
 generateComparison (Comp left op right) =
     generateExpression left ++ " " ++ generateCompOperator op ++ " " ++ generateExpression right
+
 
 generateCompOperator :: CompOperator -> String
 generateCompOperator Equal = "=="
@@ -47,6 +52,7 @@ generateCompOperator Less = "<"
 generateCompOperator LessEqual = "<="
 generateCompOperator Greater = ">"
 generateCompOperator GreaterEqual = ">="
+
 
 generateExpressions :: [Expression] -> String
 generateExpressions = unlines . map generateExpression

@@ -13,4 +13,6 @@ def suma(x, y):
     return 5+1+3+4+3+3
 
 
+suma(5,2)
+
 print(suma(x, y))
