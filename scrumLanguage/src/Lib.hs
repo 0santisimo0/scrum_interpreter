@@ -23,17 +23,17 @@ someFunc = do
     -- print binaryOperatorResults
 
     forLoop <- readFile "./resources/code.qs"
-    let forLoopResults = parse (P.parseProgram) "./resources/code.qs" forLoop
+    let forLoopResults = parse P.parseProgram "./resources/code.qs" forLoop
     print "Parser: "
     print forLoopResults
 
     completeExample <- readFile "./resources/pythonAccepted.qs"
-    let parseResult = parse (P.parseProgram) "./resources/pythonAccepted.qs" completeExample
+    let parseResult = parse P.parseProgram "./resources/pythonAccepted.qs" completeExample
     putStrLn "COMPLETE EXAMPLE"
     print parseResult
     case parseResult of
         Left err -> print err
         Right ast -> do
             let pythonCode = generateCode ast
-            writeFile "src/test.py" pythonCode
+            writeFile "src/PythonFiles/test.py" pythonCode
             putStrLn "Generated test.py"

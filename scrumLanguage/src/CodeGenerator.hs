@@ -19,10 +19,11 @@ generateBinaryOperator Sub = "-"
 generateBinaryOperator Mul = "*"
 generateBinaryOperator Div = "/"
 
+
 generateExpression :: Expression -> String
 generateExpression (Literal l) = generateLiteral l
 generateExpression (Variable v) = v
-generateExpression (FunctionCall name params) = name ++ "(" ++ intercalate ", " (map generateExpression params) ++ ")"
+generateExpression (FunctionCall name params) = "print(" ++ name ++ "(" ++ intercalate ", " (map generateExpression params) ++ "))"
 generateExpression (Assign v e) = v ++ " = " ++ generateExpression e
 generateExpression (ListExpression (ListExpr id elems)) =
     id ++ " = [" ++ unwords (map generateLiteral elems) ++ "]"

@@ -2,7 +2,6 @@
 12.3
 True
 "Hola"
-x
 x = "hola"
 y = 89
 if x == 5:
@@ -14,15 +13,15 @@ else:
     "watafac"
 
 def sum(x, y):
-    x = "Una funcion"
+    x = 6
     78
-    if x == "watafac":
-        6
+    if x >= 4:
+        z = 54
+        return "mayor o igual a 4"
     
     else:
-        1
-        "string"
+        return "menor a 4"
     
-    return x
+    return "error"
 
-sum(6, y)
+print(sum(1, y))
