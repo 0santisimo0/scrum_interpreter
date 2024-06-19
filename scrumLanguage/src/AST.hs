@@ -7,7 +7,10 @@ module AST(Expression(..),
             BinaryOperator(..),
             BinaryExpression(..),
             ListExpression(..),
-            ForLoop(..)) 
+            ForLoop(..),
+            UserStoryType(..),
+            UserStoryFormatBlock(..),
+            UserStory(..)) 
         where 
 
 data Program = Expression deriving(Show, Eq)
@@ -47,8 +50,10 @@ data CompOperator = Equal
 data Comparison = Comp Expression CompOperator Expression
                 deriving (Show, Eq)
 
-data BinaryExpression = BinExpr Literal BinaryOperator Literal
-                    deriving (Show, Eq)
+data BinaryExpression
+    = BinExprLit Literal BinaryOperator Literal
+    | BinExprId Identifier BinaryOperator Identifier
+    deriving (Show, Eq)
 
 data BinaryOperator = Add    
                 | Sub   
@@ -67,20 +72,20 @@ data Role = ScrumMaster String
             | TeamMember String
             deriving(Show, Eq)
 
-data UserStory = UserStoryID UserStoryFormatBlock deriving(Show, Eq)
+data UserStory = UserStoryExpr UserStoryID UserStoryFormatBlock deriving(Show, Eq)
 
-data UserStoryFormatBlock = Title UserStoryType AssignedTo Description Estimation Acceptance deriving(Show, Eq)
+data UserStoryFormatBlock = UserStoryFormatBlock Title UserStoryType AssignedTo Description Estimation Acceptance deriving(Show, Eq)
 
-data UserStoryType = Feature String
-                    | Spike String
-                    | POC String
-                    | Fix String
-                    | HotFix String
+data UserStoryType = Feature 
+                    | Spike 
+                    | POC 
+                    | Fix 
+                    | HotFix 
                     deriving(Show, Eq)
 
-type UserStoryID = Int
+type UserStoryID = String
 type Title = String
 type AssignedTo = Role
 type Description = String
-type Estimation = Int
+type Estimation = Integer
 type Acceptance = String
