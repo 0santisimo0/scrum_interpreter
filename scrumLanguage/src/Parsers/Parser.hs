@@ -222,10 +222,10 @@ parseUserStoryFormatBlock :: Parser UserStoryFormatBlock
 parseUserStoryFormatBlock = UserStoryFormatBlock
     <$> (reserved "T" *> char ':' *> whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
     <*> (reserved "TY" *> char ':' *>  whiteSpace *> parseUserStoryType <* char ',' <* whiteSpace)
-    <*> (reserved "PS" *> char ':' *> whiteSpace *> char '(' *>   parseRoleExp <* char ')' <* char ','<* whiteSpace)
-    <*> (reserved "DS" *> char ':' *>  whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
-    <*> (reserved "ET" *> char ':' *>  whiteSpace *> parseInteger<* char ',' <* whiteSpace)
-    <*> (reserved "AC" *> char ':' *>  whiteSpace *> parseStringLiteral)
+    <*> (optionMaybe (reserved "PS" *> char ':' *> whiteSpace *> char '(' *> parseRoleExp <* char ')' <* char ',' <* whiteSpace))
+    <*> (reserved "DS" *> char ':' *> whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
+    <*> (reserved "ET" *> char ':' *> whiteSpace *> parseInteger <* char ',' <* whiteSpace)
+    <*> (reserved "AC" *> char ':' *> whiteSpace *> parseStringLiteral)
 
 parseUserStory :: Parser Expression
 parseUserStory =
