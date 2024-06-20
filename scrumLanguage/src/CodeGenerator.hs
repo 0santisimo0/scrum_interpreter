@@ -6,6 +6,7 @@ import AST
 import Data.List (intercalate)
 
 
+
 generateLiteral :: Literal -> String
 generateLiteral (IntegerLiteral n) = show n
 generateLiteral (FloatingPointLiteral n) = show n
@@ -39,6 +40,7 @@ generateExpression (Function name params body) =
     "def " ++ name ++ "(" ++ intercalate ", " params ++ "):\n" ++
     indent (generateExpressions body)
 generateExpression (Role r) = generateRole r
+generateExpression (UserStory u) = generateUserStory u
 generateExpression _ = " Error "
 
 
@@ -71,6 +73,40 @@ indent = unlines . map ("    " ++) . lines
 
 generateCode :: [Expression] -> String
 generateCode expressions = generateImports ++ generateExpressions expressions
+
+generateUserStory :: UserStory -> String
+generateUserStory (UserStoryExpr userStoryID userStoryBlock) =
+    "def getUSView():\n" ++ 
+    indent (
+        "return " ++ show userStoryID ++ " + \": \" + \n" ++
+        indent (
+            "    \"Title: \" + " ++ show (getTitle userStoryBlock) ++ " + \n" ++
+            "    \"Type: \" + " ++ show (getType userStoryBlock) ++ " + \n" ++
+            "    \"Assigned to: \" + " ++ show (getAssignedTo userStoryBlock) ++ " + \n" ++
+            "    \"Description: \" + " ++ show (getDescription userStoryBlock) ++ " + \n" ++
+            "    \"Estimation: \" + str(" ++ show (getEstimation userStoryBlock) ++ ") + \n" ++
+            "    \"Acceptance: \" + " ++ show (getAcceptance userStoryBlock)
+        )
+    )
+
+getTitle :: UserStoryFormatBlock -> Title
+getTitle (UserStoryFormatBlock title _ _ _ _ _) = title
+
+
+getType :: UserStoryFormatBlock -> UserStoryType
+getType (UserStoryFormatBlock _ typ _ _ _ _) = typ
+
+getAssignedTo :: UserStoryFormatBlock -> Maybe AssignedTo
+getAssignedTo (UserStoryFormatBlock _ _ assignedTo _ _ _ ) = assignedTo
+
+getDescription :: UserStoryFormatBlock -> Description
+getDescription (UserStoryFormatBlock _ _ _ description _ _) = description
+
+getEstimation :: UserStoryFormatBlock -> Estimation
+getEstimation (UserStoryFormatBlock _ _ _ _ estimation _) = estimation
+
+getAcceptance :: UserStoryFormatBlock -> Acceptance
+getAcceptance (UserStoryFormatBlock _ _ _ _ _ acceptance) = acceptance
 
 generateImports :: String
 generateImports = unlines

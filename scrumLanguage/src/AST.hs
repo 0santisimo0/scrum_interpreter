@@ -10,7 +10,12 @@ module AST(Expression(..),
             ForLoop(..),
             UserStoryType(..),
             UserStoryFormatBlock(..),
-            UserStory(..)) 
+            UserStory(..),
+            Title,
+            AssignedTo,
+            Estimation,
+            Acceptance,
+            Description) 
         where 
 
 data Program = Expression deriving(Show, Eq)

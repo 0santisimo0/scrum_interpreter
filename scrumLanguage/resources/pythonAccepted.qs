@@ -40,3 +40,20 @@ fun sum(x, y) {
 
 
 :sum(6, y)
+
+US "POC-01" { 
+    T: "Titulo", 
+    TY: POC, 
+    PS: (TM: "Sam"), 
+    DS: "Describcion", 
+    ET: 3, 
+    AC: "aaaa"  
+    }
+
+US "Spike-01" { 
+    T: "Titulo", 
+    TY: Spike, 
+    DS: "Describcion", 
+    ET: 0, 
+    AC: "Nada"  
+    }

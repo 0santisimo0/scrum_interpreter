@@ -40,4 +40,20 @@ def sum(x, y):
     return "error"
 
 print(sum(6, y))
-print(manager.getScrumMaster().getName())
+def getUSView():
+    return "POC-01" + ": " + 
+            "Title: " + "Titulo" + 
+            "Type: " + POC + 
+            "Assigned to: " + Just (TeamMember "Sam") + 
+            "Description: " + "Describcion" + 
+            "Estimation: " + str(3) + 
+            "Acceptance: " + "aaaa"
+
+def getUSView():
+    return "Spike-01" + ": " + 
+            "Title: " + "Titulo" + 
+            "Type: " + Spike + 
+            "Assigned to: " + Nothing + 
+            "Description: " + "Describcion" + 
+            "Estimation: " + str(0) + 
+            "Acceptance: " + "Nada"
