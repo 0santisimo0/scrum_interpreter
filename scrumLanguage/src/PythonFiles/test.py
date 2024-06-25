@@ -40,20 +40,27 @@ def sum(x, y):
     return "error"
 
 print(sum(6, y))
-def getUSView():
-    return "POC-01" + ": " + 
-            "Title: " + "Titulo" + 
-            "Type: " + POC + 
-            "Assigned to: " + Just (TeamMember "Sam") + 
-            "Description: " + "Describcion" + 
-            "Estimation: " + str(3) + 
-            "Acceptance: " + "aaaa"
+us_POC_01 = UserStory(
+    "POC_01",
+    "Titulo",
+    POC,
+    TeamMember "Sam",
+    "Describcion",
+    3,
+    "aaaa"
+    )
 
-def getUSView():
-    return "Spike-01" + ": " + 
-            "Title: " + "Titulo" + 
-            "Type: " + Spike + 
-            "Assigned to: " + Nothing + 
-            "Description: " + "Describcion" + 
-            "Estimation: " + str(0) + 
-            "Acceptance: " + "Nada"
+manager.addUserStory(us_POC_01)
+
+us_Spike_01 = UserStory(
+    "Spike_01",
+    "Titulo",
+    Spike,
+    None,
+    "Describcion",
+    0,
+    "Nada"
+    )
+
+manager.addUserStory(us_Spike_01)
+

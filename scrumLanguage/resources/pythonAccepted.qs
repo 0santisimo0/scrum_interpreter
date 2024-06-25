@@ -41,7 +41,7 @@ fun sum(x, y) {
 
 :sum(6, y)
 
-US "POC-01" { 
+US "POC_01" { 
     T: "Titulo", 
     TY: POC, 
     PS: (TM: "Sam"), 
@@ -50,7 +50,7 @@ US "POC-01" {
     AC: "aaaa"  
     }
 
-US "Spike-01" { 
+US "Spike_01" { 
     T: "Titulo", 
     TY: Spike, 
     DS: "Describcion", 

@@ -71,23 +71,29 @@ indent :: String -> String
 indent = unlines . map ("    " ++) . lines
 
 
+unindent :: String -> String
+unindent = unlines . map (drop 4) . lines
+
+
 generateCode :: [Expression] -> String
 generateCode expressions = generateImports ++ generateExpressions expressions
 
 generateUserStory :: UserStory -> String
 generateUserStory (UserStoryExpr userStoryID userStoryBlock) =
-    "def getUSView():\n" ++ 
+    "us_" ++ userStoryID ++ " = UserStory(\n" ++ 
     indent (
-        "return " ++ show userStoryID ++ " + \": \" + \n" ++
-        indent (
-            "    \"Title: \" + " ++ show (getTitle userStoryBlock) ++ " + \n" ++
-            "    \"Type: \" + " ++ show (getType userStoryBlock) ++ " + \n" ++
-            "    \"Assigned to: \" + " ++ show (getAssignedTo userStoryBlock) ++ " + \n" ++
-            "    \"Description: \" + " ++ show (getDescription userStoryBlock) ++ " + \n" ++
-            "    \"Estimation: \" + str(" ++ show (getEstimation userStoryBlock) ++ ") + \n" ++
-            "    \"Acceptance: \" + " ++ show (getAcceptance userStoryBlock)
-        )
-    )
+        show userStoryID ++ ",\n" ++
+        show (getTitle userStoryBlock) ++ ",\n" ++
+        show (getType userStoryBlock) ++ ",\n" ++
+        generateAssignedTo (getAssignedTo userStoryBlock) ++ ",\n" ++
+        show (getDescription userStoryBlock) ++ ",\n" ++
+        show (getEstimation userStoryBlock) ++ ",\n" ++
+        show (getAcceptance userStoryBlock) ++ "\n" ++
+    ")")  ++  "\nmanager.addUserStory(us_" ++ userStoryID ++ ")\n"
+
+generateAssignedTo :: Maybe AssignedTo -> String
+generateAssignedTo Nothing = "None"
+generateAssignedTo (Just assignedTo) = show assignedTo
 
 getTitle :: UserStoryFormatBlock -> Title
 getTitle (UserStoryFormatBlock title _ _ _ _ _) = title
