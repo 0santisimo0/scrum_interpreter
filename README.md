@@ -22,7 +22,7 @@ The grammar of the language is defined in the form of BNF (Backus-Naur Form) and
 - Roles
 - User stories
 
-[grammar.ebnf](resources/grammar.ebnf)
+[grammar.ebnf](scrumLanguage/resources/grammar.ebnf)
 
 ## Parser Functionality
 The parser reads the code written in the defined language and generates an abstract syntax tree (AST) which is then used to generate the Python code. The main functions of the parser are:
@@ -47,10 +47,10 @@ The parser reads the code written in the defined language and generates an abstr
     - Acceptance
 
 ## Program Flow
-1. Grammar Definition ([BNF](resources/grammar.ebnf))
-2. Abstract Syntax Tree Creation ([AST](src/AST.hs))
-3. Parser Implementation ([Parser.hs](src/Parsers/Parser.hs))
-4. Code Generation ([CodeGenerator.hs](src/CodeGenerator.hs))
+1. Grammar Definition ([BNF](scrumLanguage/resources/grammar.ebnf))
+2. Abstract Syntax Tree Creation ([AST](scrumLanguage/src/AST.hs))
+3. Parser Implementation ([Parser.hs](scrumLanguage/src/Parsers/Parser.hs))
+4. Code Generation ([CodeGenerator.hs](scrumLanguage/src/CodeGenerator.hs))
 
 ## Installation and Use
 To install and run the parser, follow the steps below:
