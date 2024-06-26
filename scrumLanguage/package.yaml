@@ -20,9 +20,11 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/githubuser/scrumLanguage#readme>
 
 dependencies:
-- base >= 4.7 && < 5
-- parsec
-- parsec-numbers
+  - base >= 4.7 && < 5
+  - parsec
+  - parsec-numbers
+  - mtl
+  - containers
 
 ghc-options:
 - -Wall

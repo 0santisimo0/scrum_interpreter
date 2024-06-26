@@ -13,11 +13,11 @@ TM : "Ronaldiño Gaucho"
 
 
 x:= "hola"
-y:= 89
+x:= 89
 
 if (x==5) {
     6
-    x:= "watafac"
+    p:= "watafac"
 } else {
     1
     "watafac"
@@ -25,7 +25,7 @@ if (x==5) {
 
 
 fun sum(x, y) { 
-   x:= 6
+   q:= 6
    78
    if (x>=4) {
         z := 54
@@ -34,7 +34,7 @@ fun sum(x, y) {
         return "menor a 4"    
    }
 
-   return "error"
+   return "waa"
 
 }
 

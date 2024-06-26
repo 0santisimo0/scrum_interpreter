@@ -18,17 +18,17 @@ manager.addTeamMember(TeamMember("Bryant Mayers"))
 manager.addTeamMember(TeamMember("Cristiano Ronaldo"))
 manager.addTeamMember(TeamMember("Ronaldiño Gaucho"))
 x = "hola"
-y = 89
+ Error 
 
 if x == 5:
     6
-    x = "watafac"
+    p = "watafac"
 else:
     1
     "watafac"
 
 def sum(x, y):
-    x = 6
+    q = 6
     78
     
     if x >= 4:
@@ -37,7 +37,6 @@ def sum(x, y):
     else:
         return "menor a 4"
     
-    return "error"
+    return "waa"
 
 print(sum(6, y))
-print(manager.getScrumMaster().getName())

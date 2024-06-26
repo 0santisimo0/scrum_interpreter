@@ -17,6 +17,7 @@ data Program = Expression deriving(Show, Eq)
 
 type Identifier = String 
 
+
 data Literal = BooleanLiteral Bool
             | IntegerLiteral Integer
             | FloatingPointLiteral Double
@@ -36,6 +37,7 @@ data Expression = Assign Identifier Expression
                 | ReturnStatement Expression
                 | UserStory UserStory
                 | FunctionCall String [Expression]
+                | ErrorStatement String
                 deriving(Show, Eq)
 
 
