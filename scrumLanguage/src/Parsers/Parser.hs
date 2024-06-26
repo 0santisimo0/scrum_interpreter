@@ -244,4 +244,16 @@ parseUserStory =
         )))
 
 parseProgram :: MyParser [Expression]
-parseProgram = whiteSpace *> many (parseExpression <* whiteSpace) <* eof
+parseProgram = whiteSpace *> many (parseExpressionWithError <* whiteSpace) <* eof
+
+  where
+    parseExpressionWithError :: MyParser Expression
+    parseExpressionWithError = do
+        expr <- parseExpression
+        checkForError expr
+
+    checkForError :: Expression -> MyParser Expression
+    checkForError expr = do
+        case expr of
+            ErrorStatement errMsg -> fail errMsg
+            _ -> return expr

@@ -47,7 +47,7 @@ someFunc = do
     
     -- Maneja el resultado del parsing
     case parseResult of
-        -- Left err -> putStrLn $ "Error de parsing: " ++ show err
+        Left err -> putStrLn $ "Error de parsing: " ++ show err
         -- Left err -> do 
         --     print err
         Right expressions -> do

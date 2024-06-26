@@ -13,15 +13,17 @@ TM : "Ronaldiño Gaucho"
 
 
 x:= "hola"
-x:= 89
+m:= 89
 
 if (x==5) {
     6
-    p:= "watafac"
+    x:= "watafac"
 } else {
     1
     "watafac"
 }
+
+x:= 89
 
 
 fun sum(x, y) { 

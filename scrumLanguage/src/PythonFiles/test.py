@@ -18,11 +18,11 @@ manager.addTeamMember(TeamMember("Bryant Mayers"))
 manager.addTeamMember(TeamMember("Cristiano Ronaldo"))
 manager.addTeamMember(TeamMember("Ronaldiño Gaucho"))
 x = "hola"
- Error 
+m = 89
 
 if x == 5:
     6
-    p = "watafac"
+     Error 
 else:
     1
     "watafac"
