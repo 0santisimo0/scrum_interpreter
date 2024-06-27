@@ -13,10 +13,24 @@ import Control.Monad.State
 import qualified Data.Map as Map
 import Data.Functor.Identity (Identity)
 
--- Define the parser state to include the symbol table
 type SymbolTable = Map.Map String Expression
-type ParserState = SymbolTable
+type ContextStack = [SymbolTable]
+type Errors = [String]
+type ParserState = (ContextStack, Errors)
 type MyParser = ParsecT String ParserState Identity
+
+initialState :: ParserState
+initialState = ([Map.empty], [])
+
+updateSymbolTable :: String -> Expression -> MyParser ()
+updateSymbolTable var val = modifyCurrentContext (Map.insert var val)
+
+addError :: String -> MyParser ()
+addError err = modifyState (\(ctxs, errs) -> (ctxs, err : errs))
+
+hasErrors :: MyParser Bool
+hasErrors = not . null . snd <$> getState
+
 
 languageDef :: LanguageDef st
 languageDef = emptyDef
@@ -63,21 +77,31 @@ parens = P.parens lexer
 braces :: MyParser a -> MyParser a
 braces = P.braces lexer
 
--- Helper function to update the symbol table in the parser state
--- updateSymbolTable :: String -> Literal -> MyParser ()
--- updateSymbolTable var val = do
---     table <- getState
---     if Map.notMember var table
---         then modifyState (Map.insert var val)
---         else return ()
 
 -- Helper function to update the symbol table in the parser state
-updateSymbolTable :: String -> Expression -> MyParser ()
-updateSymbolTable var val = modifyState (Map.insert var val)
+-- updateSymbolTable :: String -> Expression -> MyParser ()
+-- updateSymbolTable var val = modifyState (Map.insert var val)
 
--- Helper function to check if a variable exists in the symbol table
 variableExists :: String -> MyParser Bool
-variableExists var = Map.member var <$> getState
+variableExists var = do
+  (ctxs, _) <- getState
+  case ctxs of
+    [] -> return False
+    (currentContext:_) -> return $ Map.member var currentContext
+
+pushContext :: MyParser ()
+pushContext = modifyState (\(ctx:ctxs, errs) -> (Map.empty : ctx : ctxs, errs))
+
+popContext :: MyParser ()
+popContext = modifyState (\(_:ctx:ctxs, errs) -> (ctx : ctxs, errs))
+
+modifyCurrentContext :: (SymbolTable -> SymbolTable) -> MyParser ()
+modifyCurrentContext f = modifyState (\(ctx:ctxs, errs) -> (f ctx : ctxs, errs))
+
+
+
+-- variableExists :: String -> MyParser Bool
+-- variableExists var = Map.member var . fst <$> getState
 
 parseLiteral :: MyParser Literal
 parseLiteral = try (FloatingPointLiteral <$> parseFloat)
@@ -90,15 +114,21 @@ parseVariable = Variable <$> parseIdentifier
 
 parseAssign :: MyParser Expression
 parseAssign = do
+    pos <- getPosition
     var <- parseIdentifier
-    exists <- variableExists var
     reservedOp ":="
-    val <- parseExpression
+    exists <- variableExists var
     if exists
-        then return $ ErrorStatement ("Variable " ++ var ++ " ya existe")
-    else do
-      updateSymbolTable var val
-      return $ Assign var val
+        then do
+            let line = sourceLine pos
+            let column = sourceColumn pos
+            addError ("Variable " ++ var ++ " ya existe ("++ show line ++ ", "++ show column ++")")
+            error ("Variable " ++ var ++ " ya existe ("++ show line ++ ", "++ show column ++")")
+        else  getAssignParser var
+
+
+getAssignParser :: Identifier -> MyParser Expression
+getAssignParser var = Assign var <$> parseExpression >>= \val -> updateSymbolTable var val *> pure (Assign var val)
 
 parseBinaryOperator :: MyParser BinaryOperator
 parseBinaryOperator =
@@ -206,11 +236,18 @@ parseConditional =
   parseMultipleExpressions <* spaces <* string "else" <* spaces <* char '{' <* spaces >>= \ifExpr ->
   Conditional condition ifExpr <$> parseMultipleExpressions
 
+
 parseFunction :: MyParser Expression
 parseFunction =
   reserved "fun" *> spaces *> parseIdentifier >>= \funcName ->
   char '(' *> sepBy1 (many1 letter) (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
-  Function funcName params <$> parseMultipleExpressions
+  Function funcName params <$> (pushContext *> parseMultipleExpressions <* popContext)
+
+-- parseFunction :: MyParser Expression
+-- parseFunction =
+--   reserved "fun" *> spaces *> parseIdentifier >>= \funcName ->
+--   char '(' *> sepBy1 (many1 letter) (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
+--   Function funcName params <$> parseMultipleExpressions
 
 whiteSpace :: MyParser ()
 whiteSpace = P.whiteSpace lexer
@@ -243,17 +280,6 @@ parseUserStory =
         <*> (char '{' *> whiteSpace *>  parseUserStoryFormatBlock <* whiteSpace <* char '}'
         )))
 
+
 parseProgram :: MyParser [Expression]
-parseProgram = whiteSpace *> many (parseExpressionWithError <* whiteSpace) <* eof
-
-  where
-    parseExpressionWithError :: MyParser Expression
-    parseExpressionWithError = do
-        expr <- parseExpression
-        checkForError expr
-
-    checkForError :: Expression -> MyParser Expression
-    checkForError expr = do
-        case expr of
-            ErrorStatement errMsg -> fail errMsg
-            _ -> return expr
+parseProgram = whiteSpace *> many (parseExpression <* whiteSpace) <* eof

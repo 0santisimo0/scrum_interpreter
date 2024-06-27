@@ -37,7 +37,6 @@ data Expression = Assign Identifier Expression
                 | ReturnStatement Expression
                 | UserStory UserStory
                 | FunctionCall String [Expression]
-                | ErrorStatement String
                 deriving(Show, Eq)
 
 

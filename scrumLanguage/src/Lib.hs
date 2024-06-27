@@ -41,15 +41,13 @@ someFunc :: IO ()
 someFunc = do
     -- Lee el contenido completo del archivo
     completeExample <- readFile "./resources/pythonAccepted.qs"
-    
+
     -- Intenta parsear el contenido del archivo usando parsec
     let parseResult = runParser parseProgram initialState "pythonAccepted.qs" completeExample
-    
+
     -- Maneja el resultado del parsing
     case parseResult of
         Left err -> putStrLn $ "Error de parsing: " ++ show err
-        -- Left err -> do 
-        --     print err
         Right expressions -> do
             print expressions
             let pythonCode = generateCode expressions
@@ -57,6 +55,5 @@ someFunc = do
             putStrLn "Generated test.py"
 
 
--- Estado inicial del parser (en este caso, una tabla de símbolos vacía)
 initialState :: ParserState
-initialState = Map.empty
+initialState = ([Map.empty], [])
