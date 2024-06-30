@@ -14,6 +14,7 @@ TM : "Ronaldiño Gaucho"
 
 x:= "hola"
 m:= 89
+p:= 0
 
 if (p==5) {
     6
@@ -25,11 +26,10 @@ if (p==5) {
 
 d:= "ppp"
 
-fun sum(x, y) { 
+fun sum(5, 6) { 
    ñ:= 6
    78
    d:= 54
-   d:= "sdfs"
    if (x>=4) {
         return "mayor o igual a 4"
    } else {
@@ -41,6 +41,18 @@ fun sum(x, y) {
 }
 
 
-:sum(6, y)
+fun rest(x, p) { 
+   ñ:= 6
+   78
+   d:= 85
+   if (x>=4) {
+        return "mayor o igual a 4"
+   } else {
+        return "menor a 4"    
+   }
+}
+
+
+:sum(6, p)
 
 c:= 89

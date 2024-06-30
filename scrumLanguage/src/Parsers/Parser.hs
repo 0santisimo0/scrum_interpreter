@@ -89,6 +89,21 @@ variableExists var = do
     [] -> return False
     (currentContext:_) -> return $ Map.member var currentContext
 
+
+variableExistsInAnyContext :: String -> MyParser Bool
+variableExistsInAnyContext var = do
+  (ctxs, _) <- getState
+  return $ any (Map.member var) ctxs
+
+
+varExistsInGlobalContext :: String -> MyParser Bool
+varExistsInGlobalContext var = do
+  (ctxs, _) <- getState
+  case reverse ctxs of
+    [] -> return False
+    (globalContext:_) -> return $ Map.member var globalContext
+
+
 pushContext :: MyParser ()
 pushContext = modifyState (\(ctx:ctxs, errs) -> (Map.empty : ctx : ctxs, errs))
 
@@ -110,7 +125,17 @@ parseLiteral = try (FloatingPointLiteral <$> parseFloat)
       <|> (StringLiteral <$> parseStringLiteral)
 
 parseVariable :: MyParser Expression
-parseVariable = Variable <$> parseIdentifier
+parseVariable = do
+    pos <- getPosition
+    var <- parseIdentifier
+    exists <- variableExistsInAnyContext var
+    if exists
+      then return (Variable var)
+      else do
+        let line = sourceLine pos
+        let column = sourceColumn pos
+        error ("Variable " ++ var ++ " no esta definida (" ++ show line ++ ", "++ show column ++")")
+
 
 parseAssign :: MyParser Expression
 parseAssign = do
@@ -240,7 +265,7 @@ parseConditional =
 parseFunction :: MyParser Expression
 parseFunction =
   reserved "fun" *> spaces *> parseIdentifier >>= \funcName ->
-  char '(' *> sepBy1 (many1 letter) (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
+  char '(' *> sepBy1 parseExpression (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
   Function funcName params <$> (pushContext *> parseMultipleExpressions <* popContext)
 
 -- parseFunction :: MyParser Expression

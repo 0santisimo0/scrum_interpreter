@@ -36,7 +36,7 @@ generateExpression (Conditional cond ifExpr elseExpr) =
     indent (generateExpressions ifExpr) ++ "else:\n" ++
     indent (generateExpressions elseExpr)
 generateExpression (Function name params body) =
-    "def " ++ name ++ "(" ++ intercalate ", " params ++ "):\n" ++
+    "def " ++ name ++ "(" ++ intercalate ", " (map generateExpression params) ++ "):\n" ++
     indent (generateExpressions body)
 generateExpression (Role r) = generateRole r
 generateExpression _ = " Error "

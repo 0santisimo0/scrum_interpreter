@@ -29,7 +29,7 @@ data Expression = Assign Identifier Expression
                 | Literal Literal
                 | Variable Identifier
                 | Conditional Comparison [Expression] [Expression]
-                | Function String [String] [Expression]
+                | Function String [Expression] [Expression]
                 | BinaryExpression BinaryExpression
                 | ListExpression ListExpression
                 | ForLoopExpression ForLoop

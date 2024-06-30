@@ -19,6 +19,7 @@ manager.addTeamMember(TeamMember("Cristiano Ronaldo"))
 manager.addTeamMember(TeamMember("Ronaldiño Gaucho"))
 x = x = "hola"
 m = m = 89
+p = p = 0
 
 if p == 5:
     6
@@ -28,7 +29,7 @@ else:
     "watafac"
 
 d = d = "ppp"
-def sum(x, y):
+def sum(5, 6):
     ñ = ñ = 6
     78
     d = d = 54
@@ -40,5 +41,16 @@ def sum(x, y):
     
     return "waa"
 
-print(sum(6, y))
+def rest(x, p):
+    ñ = ñ = 6
+    78
+    d = d = 85
+    
+    if x >= 4:
+        return "mayor o igual a 4"
+    else:
+        return "menor a 4"
+    
+
+print(sum(6, p))
 c = c = 89
