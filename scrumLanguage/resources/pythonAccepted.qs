@@ -53,6 +53,6 @@ fun rest(x, p) {
 }
 
 
-:sum(6, p)
+:suma(6, p)
 
 c:= 89

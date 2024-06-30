@@ -231,10 +231,17 @@ parseExpression = try parseFunction
     parseRole = Role <$> parseRoleExp
 
 parseFunctionCall :: MyParser Expression
-parseFunctionCall =
-    FunctionCall
-    <$> (char ':' *> parseIdentifier)
-    <*> (spaces *> between (char '(') (char ')') (parseExpression `sepBy` (char ',' >> spaces)))
+parseFunctionCall = do
+  char ':'
+  pos <- getPosition
+  funcName <- parseIdentifier
+  exists <- variableExists funcName
+  if not exists
+    then do
+      let line = sourceLine pos
+      let column = sourceColumn pos
+      error ("Funcion " ++ funcName ++ " no existe (" ++ show line ++ ", " ++ show column ++ ")")
+    else FunctionCall funcName <$> (spaces *> between (char '(') (char ')') (parseExpression `sepBy` (char ',' >> spaces)))
 
 parseRoleExp :: MyParser Role
 parseRoleExp = (reserved "SM" *> spaces *> char ':'  *> spaces >> ScrumMaster <$> parseStringLiteral)
@@ -262,11 +269,34 @@ parseConditional =
   Conditional condition ifExpr <$> parseMultipleExpressions
 
 
+-- parseFunction :: MyParser Expression
+-- parseFunction =
+--   reserved "fun" *> spaces *> parseIdentifier >>= \funcName ->
+--   char '(' *> sepBy1 parseExpression (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
+--   Function funcName params <$> (pushContext *> parseMultipleExpressions <* popContext)
+
 parseFunction :: MyParser Expression
-parseFunction =
-  reserved "fun" *> spaces *> parseIdentifier >>= \funcName ->
-  char '(' *> sepBy1 parseExpression (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
-  Function funcName params <$> (pushContext *> parseMultipleExpressions <* popContext)
+parseFunction = do
+  reserved "fun"
+  spaces
+  pos <- getPosition
+  funcName <- parseIdentifier
+  exists <- variableExists funcName
+  if exists
+    then do
+      let line = sourceLine pos
+      let column = sourceColumn pos
+      error ("Function " ++ funcName ++ " ya existe (" ++ show line ++ ", " ++ show column ++ ")")
+    else do
+      params <- char '(' *> sepBy1 parseExpression (spaces *> char ',' <* spaces) <* char ')'
+      spaces *> char '{' *> spaces
+      pushContext
+      body <- parseMultipleExpressions
+      popContext
+      let func = Function funcName params body
+      updateSymbolTable funcName func
+      return func
+
 
 -- parseFunction :: MyParser Expression
 -- parseFunction =
