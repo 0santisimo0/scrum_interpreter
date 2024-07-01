@@ -78,17 +78,13 @@ parens = P.parens lexer
 braces :: MyParser a -> MyParser a
 braces = P.braces lexer
 
-
--- Helper function to update the symbol table in the parser state
--- updateSymbolTable :: String -> Expression -> MyParser ()
--- updateSymbolTable var val = modifyState (Map.insert var val)
-
 variableExists :: String -> MyParser Bool
 variableExists var = do
   (ctxs, _) <- getState
   case ctxs of
     [] -> return False
     (currentContext:_) -> return $ Map.member var currentContext
+
 
 pushContext :: MyParser ()
 pushContext = modifyState (\(ctx:ctxs, errs) -> (Map.empty : ctx : ctxs, errs))
@@ -100,7 +96,6 @@ modifyCurrentContext :: (SymbolTable -> SymbolTable) -> MyParser ()
 modifyCurrentContext f = modifyState (\(ctx:ctxs, errs) -> (f ctx : ctxs, errs))
 
 
-
 parseLiteral :: MyParser Literal
 parseLiteral = try (FloatingPointLiteral <$> parseFloat)
       <|> (IntegerLiteral <$> parseInteger)
@@ -108,7 +103,17 @@ parseLiteral = try (FloatingPointLiteral <$> parseFloat)
       <|> (StringLiteral <$> parseStringLiteral)
 
 parseVariable :: MyParser Expression
-parseVariable = Variable <$> parseIdentifier
+parseVariable = do
+  var <- parseIdentifier
+  exists <- variableExists var
+  unless exists $ do
+    pos <- getPosition
+    let line = sourceLine pos
+    let column = sourceColumn pos
+    addError ("Variable " ++ var ++ " no está definida (" ++ show line ++ ", " ++ show column ++ ")")
+    fail ("Variable " ++ var ++ " no está definida (" ++ show line ++ ", " ++ show column ++ ")")
+  return $ Variable var
+
 
 parseAssign :: MyParser Expression
 parseAssign = do
@@ -128,12 +133,14 @@ parseAssign = do
 getAssignParser :: Identifier -> MyParser Expression
 getAssignParser var = Assign var <$> parseExpression >>= \val -> updateSymbolTable var val *> pure (Assign var val)
 
+
 parseBinaryOperator :: MyParser BinaryOperator
 parseBinaryOperator =
   (Add <$ reservedOp "+")
   <|> (Sub <$ reservedOp "-")
   <|> (Mul <$ reservedOp "*")
   <|> (Div <$ reservedOp "/")
+
 
 parseBinaryExpression :: MyParser Expression
 parseBinaryExpression = try parseLiteralBinaryExpression <|> try parseVariableBinaryExpression
@@ -165,6 +172,7 @@ parseBinaryExpression = try parseLiteralBinaryExpression <|> try parseVariableBi
 parseElement :: MyParser Literal
 parseElement = parseLiteral
 
+
 sameType :: [Literal] -> Bool
 sameType [] = True
 sameType (x:xs) = all ((== getType x) . getType) xs
@@ -174,6 +182,7 @@ sameType (x:xs) = all ((== getType x) . getType) xs
     getType (IntegerLiteral _) = "Integer"
     getType (FloatingPointLiteral _) = "Float"
     getType (StringLiteral _) = "String"
+
 
 parseListExpression :: MyParser Expression
 parseListExpression =
@@ -189,14 +198,35 @@ parseListExpression =
   where
     getElements (ListExpr _ elems) = elems
 
+
 parseIterable :: MyParser Expression
 parseIterable = try parseListExpression <|> parseVariable
 
+
 parseForLoop :: MyParser Expression
-parseForLoop =
-  reserved "for" *>
-  parens ((,) <$> parseAssign <*> (reserved "in" *> parseIterable)) >>= \(var, iterable) ->
-  ForLoopExpression <$> (ForLoop var iterable <$> braces parseExpression)
+parseForLoop = do
+  whiteSpace
+  reserved "for"
+  whiteSpace
+  char '('
+  whiteSpace
+  iterator <- parseAssign
+  whiteSpace
+  reserved "in"
+  whiteSpace
+  iterable <- parseIterable
+  whiteSpace
+  char ')'
+  whiteSpace
+  char '{'
+  whiteSpace
+  pushContext
+  body <- parseMultipleExpressions
+  whiteSpace
+  popContext
+  whiteSpace
+  return $ ForLoopExpression $ ForLoop iterator iterable body
+
 
 parseExpression :: MyParser Expression
 parseExpression = try parseFunction
@@ -215,19 +245,23 @@ parseExpression = try parseFunction
     parseLiteralExpression = Literal <$> parseLiteral
     parseRole = Role <$> parseRoleExp
 
+
 parseFunctionCall :: MyParser Expression
 parseFunctionCall =
     FunctionCall
     <$> (char ':' *> parseIdentifier)
     <*> (spaces *> between (char '(') (char ')') (parseExpression `sepBy` (char ',' >> spaces)))
 
+
 parseRoleExp :: MyParser Role
 parseRoleExp = (reserved "SM" *> spaces *> char ':'  *> spaces >> ScrumMaster <$> parseStringLiteral)
     <|> (reserved "PO"  *> spaces *> char ':'  *> spaces >> ProductOwner <$> parseStringLiteral)
     <|> (reserved "TM"  *> spaces *> char ':'  *> spaces >> TeamMember <$> parseStringLiteral)
 
+
 parseComparison :: MyParser Comparison
 parseComparison = Comp <$> parseExpression <*> parseCompOperator <*> parseExpression
+
 
 parseCompOperator :: MyParser CompOperator
 parseCompOperator = try (Equal <$ string "==")
@@ -237,8 +271,10 @@ parseCompOperator = try (Equal <$ string "==")
                   <|> try (Less <$ string "<")
                   <|> try (Greater <$ string ">")
 
+
 parseReturn :: MyParser Expression
 parseReturn = ReturnStatement <$> (reserved "return" *> spaces *> parseExpression)
+
 
 parseConditional :: MyParser Expression
 parseConditional = do
@@ -271,17 +307,14 @@ parseFunction =
   char '(' *> sepBy1 (many1 letter) (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
   Function funcName params <$> (pushContext *> parseMultipleExpressions <* popContext)
 
--- parseFunction :: MyParser Expression
--- parseFunction =
---   reserved "fun" *> spaces *> parseIdentifier >>= \funcName ->
---   char '(' *> sepBy1 (many1 letter) (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
---   Function funcName params <$> parseMultipleExpressions
 
 whiteSpace :: MyParser ()
 whiteSpace = P.whiteSpace lexer
 
+
 parseMultipleExpressions :: MyParser [Expression]
 parseMultipleExpressions = manyTill (parseExpression <* whiteSpace) (try (whiteSpace *> char '}'))
+
 
 parseUserStoryType :: MyParser UserStoryType
 parseUserStoryType =
@@ -291,14 +324,15 @@ parseUserStoryType =
   <|> (Fix <$  reserved "Fix")
   <|> (HotFix <$ reserved "HotFix")
 
+
 parseUserStoryFormatBlock :: MyParser UserStoryFormatBlock
 parseUserStoryFormatBlock = UserStoryFormatBlock
     <$> (reserved "T" *> char ':' *> whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
     <*> (reserved "TY" *> char ':' *>  whiteSpace *> parseUserStoryType <* char ',' <* whiteSpace)
-    <*> (reserved "PS" *> char ':' *> whiteSpace *> char '(' *>   parseRoleExp <* char ')' <* char ','<* whiteSpace)
-    <*> (reserved "DS" *> char ':' *>  whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
-    <*> (reserved "ET" *> char ':' *>  whiteSpace *> parseInteger<* char ',' <* whiteSpace)
-    <*> (reserved "AC" *> char ':' *>  whiteSpace *> parseStringLiteral)
+    <*> (optionMaybe (reserved "PS" *> char ':' *> whiteSpace *> char '(' *> parseRoleExp <* char ')' <* char ',' <* whiteSpace))
+    <*> (reserved "DS" *> char ':' *> whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
+    <*> (reserved "ET" *> char ':' *> whiteSpace *> parseInteger <* char ',' <* whiteSpace)
+    <*> (reserved "AC" *> char ':' *> whiteSpace *> parseStringLiteral)
 
 parseUserStory :: MyParser Expression
 parseUserStory =

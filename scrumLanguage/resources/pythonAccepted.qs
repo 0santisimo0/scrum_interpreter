@@ -4,6 +4,9 @@ True
 "Hola"
 
 
+h := 3
+y := h - 1
+
 SM : "Santiago Caballero"
 PO : "Samuel Escalera"
 TM : "Jefferson Pelotas"
@@ -15,7 +18,7 @@ TM : "Ronaldiño Gaucho"
 x:= "hola"
 m:= 89
 
-if (p==5) {
+if (h==5) {
     6
     t:= "watafac"
 } else {
@@ -29,8 +32,7 @@ fun sum(x, y) {
    ñ:= 6
    78
    d:= 54
-   d:= "sdfs"
-   if (x>=4) {
+   if (ñ>=4) {
         return "mayor o igual a 4"
    } else {
         return "menor a 4"    
@@ -40,7 +42,8 @@ fun sum(x, y) {
 
 }
 
-
-:sum(6, y)
+for (i:=1 in list<1,2,3>) { 
+    z:=12
+    }
 
 c:= 89
