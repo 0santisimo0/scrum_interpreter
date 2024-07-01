@@ -12,6 +12,7 @@ import Data.List (intercalate)
 import Control.Monad.State
 import qualified Data.Map as Map
 import Data.Functor.Identity (Identity)
+import Control.Monad
 
 type SymbolTable = Map.Map String Expression
 type ContextStack = [SymbolTable]
@@ -100,9 +101,6 @@ modifyCurrentContext f = modifyState (\(ctx:ctxs, errs) -> (f ctx : ctxs, errs))
 
 
 
--- variableExists :: String -> MyParser Bool
--- variableExists var = Map.member var . fst <$> getState
-
 parseLiteral :: MyParser Literal
 parseLiteral = try (FloatingPointLiteral <$> parseFloat)
       <|> (IntegerLiteral <$> parseInteger)
@@ -138,19 +136,31 @@ parseBinaryOperator =
   <|> (Div <$ reservedOp "/")
 
 parseBinaryExpression :: MyParser Expression
-parseBinaryExpression =
-    try (BinaryExpression <$>
-        (BinExprLit <$>
-            (try (FloatingPointLiteral <$> parseFloat)
-            <|> try (IntegerLiteral <$> parseInteger))
-        <*> parseBinaryOperator
-        <*> (try (FloatingPointLiteral <$> parseFloat)
-            <|> try (IntegerLiteral <$> parseInteger))))
-    <|> try (BinaryExpression <$>
-        (BinExprId <$>
-            parseIdentifier
-        <*> parseBinaryOperator
-        <*> parseIdentifier))
+parseBinaryExpression = try parseLiteralBinaryExpression <|> try parseVariableBinaryExpression
+  where
+    parseLiteralBinaryExpression = do
+      left <- parseLiteral
+      op <- parseBinaryOperator
+      right <- parseLiteral
+      return $ BinaryExpression $ BinExprLit left op right
+
+    parseVariableBinaryExpression = do
+      leftVar <- parseIdentifier
+      checkVariableExists leftVar
+      op <- parseBinaryOperator
+      rightVar <- parseIdentifier
+      checkVariableExists rightVar
+      return $ BinaryExpression $ BinExprId leftVar op rightVar
+
+    checkVariableExists var = do
+      exists <- variableExists var
+      unless exists $ do
+        pos <- getPosition
+        let line = sourceLine pos
+        let column = sourceColumn pos
+        addError ("Variable " ++ var ++ " no está definida (" ++ show line ++ ", " ++ show column ++ ")")
+        fail ("Variable " ++ var ++ " no está definida (" ++ show line ++ ", " ++ show column ++ ")")
+
 
 parseElement :: MyParser Literal
 parseElement = parseLiteral
@@ -231,10 +241,28 @@ parseReturn :: MyParser Expression
 parseReturn = ReturnStatement <$> (reserved "return" *> spaces *> parseExpression)
 
 parseConditional :: MyParser Expression
-parseConditional =
-  reserved "if" *> spaces *> char '(' *> parseComparison <* char ')' <* spaces <* char '{' <* spaces >>= \condition ->
-  parseMultipleExpressions <* spaces <* string "else" <* spaces <* char '{' <* spaces >>= \ifExpr ->
-  Conditional condition ifExpr <$> parseMultipleExpressions
+parseConditional = do
+  whiteSpace
+  reserved "if"
+  whiteSpace
+  condition <- parens (whiteSpace *> parseComparison <* whiteSpace)
+  whiteSpace
+  char '{'
+  whiteSpace
+  pushContext
+  ifExpr <- parseMultipleExpressions
+  whiteSpace
+  popContext
+  whiteSpace
+  reserved "else"
+  whiteSpace
+  char '{'
+  whiteSpace
+  pushContext
+  elseExpr <- parseMultipleExpressions
+  whiteSpace
+  popContext
+  return $ Conditional condition ifExpr elseExpr
 
 
 parseFunction :: MyParser Expression
