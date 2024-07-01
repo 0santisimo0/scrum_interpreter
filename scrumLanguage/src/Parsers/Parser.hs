@@ -12,6 +12,7 @@ import Data.List (intercalate)
 import Control.Monad.State
 import qualified Data.Map as Map
 import Data.Functor.Identity (Identity)
+import Data.Bifunctor
 
 type SymbolTable = Map.Map String Expression
 type ContextStack = [SymbolTable]
@@ -26,7 +27,7 @@ updateSymbolTable :: String -> Expression -> MyParser ()
 updateSymbolTable var val = modifyCurrentContext (Map.insert var val)
 
 addError :: String -> MyParser ()
-addError err = modifyState (\(ctxs, errs) -> (ctxs, err : errs))
+addError err = modifyState (second (err :))
 
 hasErrors :: MyParser Bool
 hasErrors = not . null . snd <$> getState
@@ -134,7 +135,20 @@ parseVariable = do
       else do
         let line = sourceLine pos
         let column = sourceColumn pos
-        error ("Variable " ++ var ++ " no esta definida (" ++ show line ++ ", "++ show column ++")")
+        error ("Variable " ++ var ++ " no definido (" ++ show line ++ ", "++ show column ++")")
+
+parseParam :: MyParser Parameter
+parseParam = do
+    pos <- getPosition
+    var <- parseIdentifier
+    exists <- variableExists var
+    if exists
+      then return (Parameter var)
+      else do
+        let line = sourceLine pos
+        let column = sourceColumn pos
+        error ("Parametro " ++ var ++ " no esta definida (" ++ show line ++ ", "++ show column ++")")
+
 
 
 parseAssign :: MyParser Expression
@@ -147,13 +161,17 @@ parseAssign = do
         then do
             let line = sourceLine pos
             let column = sourceColumn pos
-            addError ("Variable " ++ var ++ " ya existe ("++ show line ++ ", "++ show column ++")")
-            error ("Variable " ++ var ++ " ya existe ("++ show line ++ ", "++ show column ++")")
-        else  getAssignParser var
-
+            let errorMsg = "Variable " ++ var ++ " ya existe (" ++ show line ++ ", " ++ show column ++ ")"
+            addError errorMsg
+            fail errorMsg
+        else getAssignParser var
 
 getAssignParser :: Identifier -> MyParser Expression
-getAssignParser var = Assign var <$> parseExpression >>= \val -> updateSymbolTable var val *> pure (Assign var val)
+getAssignParser var = do
+    val <- parseExpression
+    updateSymbolTable var val
+    pure (Assign var val)
+
 
 parseBinaryOperator :: MyParser BinaryOperator
 parseBinaryOperator =
@@ -232,7 +250,7 @@ parseExpression = try parseFunction
 
 parseFunctionCall :: MyParser Expression
 parseFunctionCall = do
-  char ':'
+  _ <- char ':'
   pos <- getPosition
   funcName <- parseIdentifier
   exists <- variableExists funcName
@@ -281,14 +299,14 @@ parseFunction = do
   spaces
   pos <- getPosition
   funcName <- parseIdentifier
-  exists <- variableExists funcName
+  exists <- variableExistsInAnyContext funcName
   if exists
     then do
       let line = sourceLine pos
       let column = sourceColumn pos
       error ("Function " ++ funcName ++ " ya existe (" ++ show line ++ ", " ++ show column ++ ")")
     else do
-      params <- char '(' *> sepBy1 parseExpression (spaces *> char ',' <* spaces) <* char ')'
+      params <- char '(' *> sepBy1 parseParam (spaces *> char ',' <* spaces) <* char ')'
       spaces *> char '{' *> spaces
       pushContext
       body <- parseMultipleExpressions

@@ -26,7 +26,7 @@ if (p==5) {
 
 d:= "ppp"
 
-fun sum(5, 6) { 
+fun sum(d, p) { 
    ñ:= 6
    78
    d:= 54
@@ -53,6 +53,6 @@ fun rest(x, p) {
 }
 
 
-:suma(6, p)
+:rest(6, p)
 
 c:= 89

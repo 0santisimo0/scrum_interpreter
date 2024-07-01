@@ -17,22 +17,22 @@ manager.addTeamMember(TeamMember("Jefferson Pelotas"))
 manager.addTeamMember(TeamMember("Bryant Mayers"))
 manager.addTeamMember(TeamMember("Cristiano Ronaldo"))
 manager.addTeamMember(TeamMember("Ronaldiño Gaucho"))
-x = x = "hola"
-m = m = 89
-p = p = 0
+x = "hola"
+m = 89
+p = 0
 
 if p == 5:
     6
-    t = t = "watafac"
+    t = "watafac"
 else:
     1
     "watafac"
 
-d = d = "ppp"
-def sum(5, 6):
-    ñ = ñ = 6
+d = "ppp"
+def sum(d, p):
+    ñ = 6
     78
-    d = d = 54
+    d = 54
     
     if x >= 4:
         return "mayor o igual a 4"
@@ -42,9 +42,9 @@ def sum(5, 6):
     return "waa"
 
 def rest(x, p):
-    ñ = ñ = 6
+    ñ = 6
     78
-    d = d = 85
+    d = 85
     
     if x >= 4:
         return "mayor o igual a 4"
@@ -52,5 +52,5 @@ def rest(x, p):
         return "menor a 4"
     
 
-print(sum(6, p))
-c = c = 89
+print(rest(6, p))
+c = 89
