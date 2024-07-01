@@ -13,9 +13,10 @@ module AST(Expression(..),
             UserStory(..)) 
         where 
 
-data Program = Expression deriving(Show, Eq)
+data Program = Either String Expression deriving(Show, Eq)
 
 type Identifier = String 
+
 
 data Literal = BooleanLiteral Bool
             | IntegerLiteral Integer

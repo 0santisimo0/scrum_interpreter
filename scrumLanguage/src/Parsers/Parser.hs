@@ -1,5 +1,5 @@
 module Parsers.Parser (
-    parseProgram
+    parseProgram, ParserState
     ) where
 
 import AST
@@ -9,6 +9,28 @@ import Text.Parsec.Language
 import qualified Text.Parsec.Token as P
 import Control.Monad (void)
 import Data.List (intercalate)
+import Control.Monad.State
+import qualified Data.Map as Map
+import Data.Functor.Identity (Identity)
+
+type SymbolTable = Map.Map String Expression
+type ContextStack = [SymbolTable]
+type Errors = [String]
+type ParserState = (ContextStack, Errors)
+type MyParser = ParsecT String ParserState Identity
+
+initialState :: ParserState
+initialState = ([Map.empty], [])
+
+updateSymbolTable :: String -> Expression -> MyParser ()
+updateSymbolTable var val = modifyCurrentContext (Map.insert var val)
+
+addError :: String -> MyParser ()
+addError err = modifyState (\(ctxs, errs) -> (ctxs, err : errs))
+
+hasErrors :: MyParser Bool
+hasErrors = not . null . snd <$> getState
+
 
 languageDef :: LanguageDef st
 languageDef = emptyDef
@@ -28,70 +50,101 @@ languageDef = emptyDef
 lexer :: P.TokenParser st
 lexer = P.makeTokenParser languageDef
 
-parseIdentifier :: Parser String
+parseIdentifier :: MyParser String
 parseIdentifier = P.identifier lexer
 
-parseInteger :: Parser Integer
+parseInteger :: MyParser Integer
 parseInteger = P.integer lexer
 
-parseFloat :: Parser Double
+parseFloat :: MyParser Double
 parseFloat = P.float lexer
 
-parseBoolean :: Parser Bool
+parseBoolean :: MyParser Bool
 parseBoolean = (True <$ reserved "True")  <|> (False <$ reserved "False")
 
-parseStringLiteral :: Parser String
+parseStringLiteral :: MyParser String
 parseStringLiteral = P.stringLiteral lexer
 
-reserved :: String -> Parser ()
+reserved :: String -> MyParser ()
 reserved = P.reserved lexer
 
-reservedOp :: String -> Parser ()
+reservedOp :: String -> MyParser ()
 reservedOp = P.reservedOp lexer
 
-parens :: Parser a -> Parser a
+parens :: MyParser a -> MyParser a
 parens = P.parens lexer
 
-braces :: Parser a -> Parser a
+braces :: MyParser a -> MyParser a
 braces = P.braces lexer
 
--- commaSep :: Parser a -> Parser [a]
--- commaSep = P.commaSep lexer
+
+-- Helper function to update the symbol table in the parser state
+-- updateSymbolTable :: String -> Expression -> MyParser ()
+-- updateSymbolTable var val = modifyState (Map.insert var val)
+
+variableExists :: String -> MyParser Bool
+variableExists var = do
+  (ctxs, _) <- getState
+  case ctxs of
+    [] -> return False
+    (currentContext:_) -> return $ Map.member var currentContext
+
+pushContext :: MyParser ()
+pushContext = modifyState (\(ctx:ctxs, errs) -> (Map.empty : ctx : ctxs, errs))
+
+popContext :: MyParser ()
+popContext = modifyState (\(_:ctx:ctxs, errs) -> (ctx : ctxs, errs))
+
+modifyCurrentContext :: (SymbolTable -> SymbolTable) -> MyParser ()
+modifyCurrentContext f = modifyState (\(ctx:ctxs, errs) -> (f ctx : ctxs, errs))
 
 
-parseLiteral :: Parser Literal
+
+-- variableExists :: String -> MyParser Bool
+-- variableExists var = Map.member var . fst <$> getState
+
+parseLiteral :: MyParser Literal
 parseLiteral = try (FloatingPointLiteral <$> parseFloat)
       <|> (IntegerLiteral <$> parseInteger)
       <|> (BooleanLiteral <$> parseBoolean)
       <|> (StringLiteral <$> parseStringLiteral)
 
-
-parseVariable :: Parser Expression
+parseVariable :: MyParser Expression
 parseVariable = Variable <$> parseIdentifier
 
+parseAssign :: MyParser Expression
+parseAssign = do
+    pos <- getPosition
+    var <- parseIdentifier
+    reservedOp ":="
+    exists <- variableExists var
+    if exists
+        then do
+            let line = sourceLine pos
+            let column = sourceColumn pos
+            addError ("Variable " ++ var ++ " ya existe ("++ show line ++ ", "++ show column ++")")
+            error ("Variable " ++ var ++ " ya existe ("++ show line ++ ", "++ show column ++")")
+        else  getAssignParser var
 
-parseAssign :: Parser Expression
-parseAssign = Assign
-    <$> parseIdentifier
-    <*> (reservedOp ":=" *> parseExpression)
 
+getAssignParser :: Identifier -> MyParser Expression
+getAssignParser var = Assign var <$> parseExpression >>= \val -> updateSymbolTable var val *> pure (Assign var val)
 
-parseBinaryOperator :: Parser BinaryOperator
-parseBinaryOperator = 
+parseBinaryOperator :: MyParser BinaryOperator
+parseBinaryOperator =
   (Add <$ reservedOp "+")
   <|> (Sub <$ reservedOp "-")
   <|> (Mul <$ reservedOp "*")
   <|> (Div <$ reservedOp "/")
 
-
-parseBinaryExpression :: Parser Expression
-parseBinaryExpression = 
-    try (BinaryExpression <$> 
-        (BinExprLit <$> 
-            (try (FloatingPointLiteral <$> parseFloat) 
+parseBinaryExpression :: MyParser Expression
+parseBinaryExpression =
+    try (BinaryExpression <$>
+        (BinExprLit <$>
+            (try (FloatingPointLiteral <$> parseFloat)
             <|> try (IntegerLiteral <$> parseInteger))
-        <*> parseBinaryOperator 
-        <*> (try (FloatingPointLiteral <$> parseFloat) 
+        <*> parseBinaryOperator
+        <*> (try (FloatingPointLiteral <$> parseFloat)
             <|> try (IntegerLiteral <$> parseInteger))))
     <|> try (BinaryExpression <$>
         (BinExprId <$>
@@ -99,9 +152,8 @@ parseBinaryExpression =
         <*> parseBinaryOperator
         <*> parseIdentifier))
 
-parseElement :: Parser Literal
+parseElement :: MyParser Literal
 parseElement = parseLiteral
-
 
 sameType :: [Literal] -> Bool
 sameType [] = True
@@ -113,13 +165,12 @@ sameType (x:xs) = all ((== getType x) . getType) xs
     getType (FloatingPointLiteral _) = "Float"
     getType (StringLiteral _) = "String"
 
-
-parseListExpression :: Parser Expression
-parseListExpression = 
-  (ListExpr <$> 
-    parseIdentifier <* 
-    reservedOp "<" <*> 
-    (parseElement `sepBy` reservedOp ",") <* 
+parseListExpression :: MyParser Expression
+parseListExpression =
+  (ListExpr <$>
+    parseIdentifier <*
+    reservedOp "<" <*>
+    (parseElement `sepBy` reservedOp ",") <*
     reservedOp ">"
   ) >>= \listExpr ->
   if sameType (getElements listExpr)
@@ -128,18 +179,16 @@ parseListExpression =
   where
     getElements (ListExpr _ elems) = elems
 
-parseIterable :: Parser Expression
+parseIterable :: MyParser Expression
 parseIterable = try parseListExpression <|> parseVariable
 
-
-parseForLoop :: Parser Expression
-parseForLoop = 
-  reserved "for" *> 
+parseForLoop :: MyParser Expression
+parseForLoop =
+  reserved "for" *>
   parens ((,) <$> parseAssign <*> (reserved "in" *> parseIterable)) >>= \(var, iterable) ->
   ForLoopExpression <$> (ForLoop var iterable <$> braces parseExpression)
 
-
-parseExpression :: Parser Expression
+parseExpression :: MyParser Expression
 parseExpression = try parseFunction
               <|> try parseBinaryExpression
               <|> try parseForLoop
@@ -156,26 +205,21 @@ parseExpression = try parseFunction
     parseLiteralExpression = Literal <$> parseLiteral
     parseRole = Role <$> parseRoleExp
 
-
-parseFunctionCall :: Parser Expression
+parseFunctionCall :: MyParser Expression
 parseFunctionCall =
     FunctionCall
     <$> (char ':' *> parseIdentifier)
     <*> (spaces *> between (char '(') (char ')') (parseExpression `sepBy` (char ',' >> spaces)))
 
-
-
-parseRoleExp :: Parser Role
+parseRoleExp :: MyParser Role
 parseRoleExp = (reserved "SM" *> spaces *> char ':'  *> spaces >> ScrumMaster <$> parseStringLiteral)
     <|> (reserved "PO"  *> spaces *> char ':'  *> spaces >> ProductOwner <$> parseStringLiteral)
     <|> (reserved "TM"  *> spaces *> char ':'  *> spaces >> TeamMember <$> parseStringLiteral)
 
-
-parseComparison :: Parser Comparison
+parseComparison :: MyParser Comparison
 parseComparison = Comp <$> parseExpression <*> parseCompOperator <*> parseExpression
 
-
-parseCompOperator :: Parser CompOperator
+parseCompOperator :: MyParser CompOperator
 parseCompOperator = try (Equal <$ string "==")
                   <|> try (LessEqual <$ string "<=")
                   <|> try (GreaterEqual <$ string ">=")
@@ -183,42 +227,43 @@ parseCompOperator = try (Equal <$ string "==")
                   <|> try (Less <$ string "<")
                   <|> try (Greater <$ string ">")
 
-
-parseReturn :: Parser Expression
+parseReturn :: MyParser Expression
 parseReturn = ReturnStatement <$> (reserved "return" *> spaces *> parseExpression)
 
-
-parseConditional :: Parser Expression
-parseConditional = 
+parseConditional :: MyParser Expression
+parseConditional =
   reserved "if" *> spaces *> char '(' *> parseComparison <* char ')' <* spaces <* char '{' <* spaces >>= \condition ->
   parseMultipleExpressions <* spaces <* string "else" <* spaces <* char '{' <* spaces >>= \ifExpr ->
   Conditional condition ifExpr <$> parseMultipleExpressions
 
 
-parseFunction :: Parser Expression
-parseFunction = 
+parseFunction :: MyParser Expression
+parseFunction =
   reserved "fun" *> spaces *> parseIdentifier >>= \funcName ->
   char '(' *> sepBy1 (many1 letter) (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
-  Function funcName params <$> parseMultipleExpressions
+  Function funcName params <$> (pushContext *> parseMultipleExpressions <* popContext)
 
+-- parseFunction :: MyParser Expression
+-- parseFunction =
+--   reserved "fun" *> spaces *> parseIdentifier >>= \funcName ->
+--   char '(' *> sepBy1 (many1 letter) (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
+--   Function funcName params <$> parseMultipleExpressions
 
-whiteSpace :: Parser ()
+whiteSpace :: MyParser ()
 whiteSpace = P.whiteSpace lexer
 
-parseMultipleExpressions :: Parser [Expression]
+parseMultipleExpressions :: MyParser [Expression]
 parseMultipleExpressions = manyTill (parseExpression <* whiteSpace) (try (whiteSpace *> char '}'))
 
-
-parseUserStoryType :: Parser UserStoryType
-parseUserStoryType = 
+parseUserStoryType :: MyParser UserStoryType
+parseUserStoryType =
   (Feature <$ reserved "Feature")
   <|> (Spike <$ reserved "Spike")
-  <|> (POC <$ reserved "POC") 
+  <|> (POC <$ reserved "POC")
   <|> (Fix <$  reserved "Fix")
   <|> (HotFix <$ reserved "HotFix")
 
-
-parseUserStoryFormatBlock :: Parser UserStoryFormatBlock
+parseUserStoryFormatBlock :: MyParser UserStoryFormatBlock
 parseUserStoryFormatBlock = UserStoryFormatBlock
     <$> (reserved "T" *> char ':' *> whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
     <*> (reserved "TY" *> char ':' *>  whiteSpace *> parseUserStoryType <* char ',' <* whiteSpace)
@@ -227,12 +272,14 @@ parseUserStoryFormatBlock = UserStoryFormatBlock
     <*> (reserved "ET" *> char ':' *>  whiteSpace *> parseInteger<* char ',' <* whiteSpace)
     <*> (reserved "AC" *> char ':' *>  whiteSpace *> parseStringLiteral)
 
-parseUserStory :: Parser Expression
+parseUserStory :: MyParser Expression
 parseUserStory =
-    UserStory <$> ( reserved "US" *> 
-        ( UserStoryExpr 
+    UserStory <$> ( reserved "US" *>
+        ( UserStoryExpr
         <$>parseStringLiteral
         <*> (char '{' *> whiteSpace *>  parseUserStoryFormatBlock <* whiteSpace <* char '}'
         )))
-parseProgram :: Parser [Expression]
-parseProgram = whiteSpace *> parseExpression `endBy` void (many $ oneOf "\n\r") <* eof
+
+
+parseProgram :: MyParser [Expression]
+parseProgram = whiteSpace *> many (parseExpression <* whiteSpace) <* eof
