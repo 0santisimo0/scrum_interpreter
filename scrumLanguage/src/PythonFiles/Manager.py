@@ -8,6 +8,7 @@ class Manager:
         self.scrum_master = ScrumMaster("Null")
         self.product_owner = ProductOwner("Null")
         self.team_members = []
+        self.user_stories = []
 
     def getScrumMaster(self):
         return self.scrum_master
@@ -26,3 +27,16 @@ class Manager:
 
     def addTeamMember(self, team_member):
         self.team_members.append(team_member)
+
+    def addUserStory(self, user_story):
+        self.user_stories.append(user_story)
+
+    def distributeUserStories(self):
+        import random
+        for user_story in self.user_stories:
+            if not user_story.assigned_to:
+                user_story.assigned_to = random.choice(self.team_members).name
+
+    def displayUserStories(self):
+        for us in self.user_stories:
+            print(us.getView())

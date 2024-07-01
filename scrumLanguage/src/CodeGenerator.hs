@@ -29,7 +29,7 @@ generateExpression (ListExpression (ListExpr id elems)) =
     id ++ " = [" ++ unwords (map generateLiteral elems) ++ "]"
 generateExpression (ForLoopExpression (ForLoop var iterable body)) =
     "for " ++ generateExpression var ++ " in " ++ generateExpression iterable ++ ":\n" ++
-    indent (generateExpression body)
+    indent (generateExpressions body)
 generateExpression (ReturnStatement e) = "return " ++ generateExpression e
 generateExpression (Conditional cond ifExpr elseExpr) =
     "\nif " ++ generateComparison cond ++ ":\n" ++
@@ -39,6 +39,7 @@ generateExpression (Function name params body) =
     "def " ++ name ++ "(" ++ intercalate ", " params ++ "):\n" ++
     indent (generateExpressions body)
 generateExpression (Role r) = generateRole r
+generateExpression (UserStory u) = generateUserStory u
 generateExpression _ = " Error "
 
 
@@ -71,6 +72,42 @@ indent = unlines . map ("    " ++) . lines
 
 generateCode :: [Expression] -> String
 generateCode expressions = generateImports ++ generateExpressions expressions
+
+generateUserStory :: UserStory -> String
+generateUserStory (UserStoryExpr userStoryID userStoryBlock) =
+    "us_" ++ userStoryID ++ " = UserStory(\n" ++ 
+    indent (
+        show userStoryID ++ ",\n" ++
+        show (getTitle userStoryBlock) ++ ",\n" ++
+        show (getType userStoryBlock) ++ ",\n" ++
+        generateAssignedTo (getAssignedTo userStoryBlock) ++ ",\n" ++
+        show (getDescription userStoryBlock) ++ ",\n" ++
+        show (getEstimation userStoryBlock) ++ ",\n" ++
+        show (getAcceptance userStoryBlock) ++ "\n" ++
+    ")")  ++  "\nmanager.addUserStory(us_" ++ userStoryID ++ ")\n"
+
+generateAssignedTo :: Maybe AssignedTo -> String
+generateAssignedTo Nothing = "None"
+generateAssignedTo (Just assignedTo) = show assignedTo
+
+getTitle :: UserStoryFormatBlock -> Title
+getTitle (UserStoryFormatBlock title _ _ _ _ _) = title
+
+
+getType :: UserStoryFormatBlock -> UserStoryType
+getType (UserStoryFormatBlock _ typ _ _ _ _) = typ
+
+getAssignedTo :: UserStoryFormatBlock -> Maybe AssignedTo
+getAssignedTo (UserStoryFormatBlock _ _ assignedTo _ _ _ ) = assignedTo
+
+getDescription :: UserStoryFormatBlock -> Description
+getDescription (UserStoryFormatBlock _ _ _ description _ _) = description
+
+getEstimation :: UserStoryFormatBlock -> Estimation
+getEstimation (UserStoryFormatBlock _ _ _ _ estimation _) = estimation
+
+getAcceptance :: UserStoryFormatBlock -> Acceptance
+getAcceptance (UserStoryFormatBlock _ _ _ _ _ acceptance) = acceptance
 
 generateImports :: String
 generateImports = unlines
