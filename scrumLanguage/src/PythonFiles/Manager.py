@@ -1,8 +1,10 @@
 import random
+from collections import deque
 from UserStory import UserStory
 from TeamMember import TeamMember
 from ScrumMaster import ScrumMaster
 from ProductOwner import ProductOwner
+from ScrumView import ScrumView
 
 class Manager:
     def __init__(self):
@@ -38,12 +40,25 @@ class Manager:
 
     def _shuffleAndAssignStories(self):
         random.shuffle(self.team_members)
-        
-        for story in self.user_stories:
-            assigned_member = random.choice(self.team_members)
+        queue = deque(self.team_members)
+
+        for i, story in enumerate(self.user_stories):
+            assigned_member = queue[i % len(queue)] 
             story.assignMember(assigned_member)
-
-        print("Historias de usuario asignadas correctamente.")
-
+            
     def setUserStories(self, user_stories):
         self.user_stories = user_stories
+
+    def showViewIfScrumAdded(self):
+
+        ##TODO:Errase this entire section to generate US, inside pythonAccepted.qs
+        self.setUserStories([
+            UserStory("Historia 1", "Descripción de la historia 1"),
+            UserStory("Historia 2", "Descripción de la historia 2"),
+            UserStory("Historia 3", "Descripción de la historia 3"),
+        ])
+        ###
+        
+        if (self.user_stories and self.team_members):
+            scrum_view = ScrumView(self)
+            scrum_view.show_view()

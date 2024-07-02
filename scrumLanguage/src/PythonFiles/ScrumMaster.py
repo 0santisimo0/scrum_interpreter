@@ -1,5 +1,3 @@
-# scrum_members.py
-
 from ScrumMember import ScrumMember
 
 

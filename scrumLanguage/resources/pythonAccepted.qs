@@ -6,7 +6,7 @@ True
 
 SM : "Santiago Caballero"
 PO : "Samuel Escalera"
-TM : "Jefferson Pelotas"
+TM : "Jefferson Viejo"
 TM : "Bryant Mayers"
 TM : "Cristiano Ronaldo"
 TM : "Ronaldiño Gaucho"

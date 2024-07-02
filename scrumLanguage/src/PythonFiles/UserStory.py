@@ -4,7 +4,7 @@ class UserStory:
     def __init__(self, title, description):
         self.title = title
         self.description = description
-        self.team_member = TeamMember(""); # Inicialmente no asignado
+        self.team_member = TeamMember("")
 
     def assignMember(self, member):
         self.team_member = member

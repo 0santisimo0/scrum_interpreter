@@ -13,7 +13,7 @@ sm = ScrumMaster("Santiago Caballero")
 manager.setScrumMaster(sm)
 po = ProductOwner("Samuel Escalera") 
 manager.setProductOwner(sm)
-manager.addTeamMember(TeamMember("Jeffer Son"))
+manager.addTeamMember(TeamMember("Jefferson Viejo"))
 manager.addTeamMember(TeamMember("Bryant Mayers"))
 manager.addTeamMember(TeamMember("Cristiano Ronaldo"))
 manager.addTeamMember(TeamMember("Ronaldiño Gaucho"))
@@ -32,10 +32,9 @@ d = "ppp"
 def sum(d, p):
     ñ = 6
     78
-    x = 2
-    d = 54
+    x = 54
     
-    if x >= 4:
+    if p >= 4:
         return "mayor o igual a 4"
     else:
         return "menor a 4"
@@ -55,3 +54,5 @@ def rest(x, p):
 
 print(rest(6, p))
 c = 89
+
+manager.showViewIfScrumAdded()

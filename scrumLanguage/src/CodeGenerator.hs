@@ -73,7 +73,7 @@ indent = unlines . map ("    " ++) . lines
 
 
 generateCode :: [Expression] -> String
-generateCode expressions = generateImports ++ generateExpressions expressions
+generateCode expressions = generateImports ++ generateExpressions expressions ++ generateView
 
 generateImports :: String
 generateImports = unlines
@@ -85,3 +85,6 @@ generateImports = unlines
     , "manager = Manager()"
     , ""
     ]
+
+generateView :: String
+generateView = "\nmanager.showViewIfScrumAdded()"
