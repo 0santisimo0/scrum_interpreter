@@ -29,8 +29,8 @@ d:= "ppp"
 fun sum(d, p) { 
    ñ:= 6
    78
-   d:= 54
-   if (x>=4) {
+   x:= 54
+   if (p>=4) {
         return "mayor o igual a 4"
    } else {
         return "menor a 4"    

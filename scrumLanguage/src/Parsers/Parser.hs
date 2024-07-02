@@ -79,10 +79,6 @@ braces :: MyParser a -> MyParser a
 braces = P.braces lexer
 
 
--- Helper function to update the symbol table in the parser state
--- updateSymbolTable :: String -> Expression -> MyParser ()
--- updateSymbolTable var val = modifyState (Map.insert var val)
-
 variableExists :: String -> MyParser Bool
 variableExists var = do
   (ctxs, _) <- getState
@@ -115,10 +111,6 @@ modifyCurrentContext :: (SymbolTable -> SymbolTable) -> MyParser ()
 modifyCurrentContext f = modifyState (\(ctx:ctxs, errs) -> (f ctx : ctxs, errs))
 
 
-
--- variableExists :: String -> MyParser Bool
--- variableExists var = Map.member var . fst <$> getState
-
 parseLiteral :: MyParser Literal
 parseLiteral = try (FloatingPointLiteral <$> parseFloat)
       <|> (IntegerLiteral <$> parseInteger)
@@ -129,7 +121,7 @@ parseVariable :: MyParser Expression
 parseVariable = do
     pos <- getPosition
     var <- parseIdentifier
-    exists <- variableExistsInAnyContext var
+    exists <- variableExists var
     if exists
       then return (Variable var)
       else do
@@ -141,14 +133,18 @@ parseParam :: MyParser Parameter
 parseParam = do
     pos <- getPosition
     var <- parseIdentifier
-    exists <- variableExists var
-    if exists
-      then return (Parameter var)
+    existsInGlobal <- varExistsInGlobalContext var
+    if existsInGlobal
+      then do
+        (ctxs, errs) <- getState
+        let globalContext = last ctxs
+        let val = globalContext Map.! var
+        modifyCurrentContext (Map.insert var val)
+        return (Parameter var)
       else do
         let line = sourceLine pos
         let column = sourceColumn pos
-        error ("Parametro " ++ var ++ " no esta definida (" ++ show line ++ ", "++ show column ++")")
-
+        error ("Parametro " ++ var ++ " no esta definido en el contexto global (" ++ show line ++ ", "++ show column ++")")
 
 
 parseAssign :: MyParser Expression
@@ -163,7 +159,7 @@ parseAssign = do
             let column = sourceColumn pos
             let errorMsg = "Variable " ++ var ++ " ya existe (" ++ show line ++ ", " ++ show column ++ ")"
             addError errorMsg
-            fail errorMsg
+            error errorMsg
         else getAssignParser var
 
 getAssignParser :: Identifier -> MyParser Expression
@@ -287,12 +283,6 @@ parseConditional =
   Conditional condition ifExpr <$> parseMultipleExpressions
 
 
--- parseFunction :: MyParser Expression
--- parseFunction =
---   reserved "fun" *> spaces *> parseIdentifier >>= \funcName ->
---   char '(' *> sepBy1 parseExpression (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
---   Function funcName params <$> (pushContext *> parseMultipleExpressions <* popContext)
-
 parseFunction :: MyParser Expression
 parseFunction = do
   reserved "fun"
@@ -306,9 +296,9 @@ parseFunction = do
       let column = sourceColumn pos
       error ("Function " ++ funcName ++ " ya existe (" ++ show line ++ ", " ++ show column ++ ")")
     else do
+      pushContext
       params <- char '(' *> sepBy1 parseParam (spaces *> char ',' <* spaces) <* char ')'
       spaces *> char '{' *> spaces
-      pushContext
       body <- parseMultipleExpressions
       popContext
       let func = Function funcName params body

@@ -13,7 +13,7 @@ sm = ScrumMaster("Santiago Caballero")
 manager.setScrumMaster(sm)
 po = ProductOwner("Samuel Escalera") 
 manager.setProductOwner(sm)
-manager.addTeamMember(TeamMember("Jefferson Pelotas"))
+manager.addTeamMember(TeamMember("Jeffer Son"))
 manager.addTeamMember(TeamMember("Bryant Mayers"))
 manager.addTeamMember(TeamMember("Cristiano Ronaldo"))
 manager.addTeamMember(TeamMember("Ronaldiño Gaucho"))
@@ -32,6 +32,7 @@ d = "ppp"
 def sum(d, p):
     ñ = 6
     78
+    x = 2
     d = 54
     
     if x >= 4:
