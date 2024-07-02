@@ -39,7 +39,6 @@ def sum(d, p):
     else:
         return "menor a 4"
     
-    return "waa"
 
 def rest(x, p):
     ñ = 6
@@ -53,6 +52,6 @@ def rest(x, p):
     
 
 print(rest(6, p))
-c = 89
+print(sum(5, 9))
 
 manager.showViewIfScrumAdded()

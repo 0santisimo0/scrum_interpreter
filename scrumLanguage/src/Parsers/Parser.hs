@@ -305,13 +305,6 @@ parseFunction = do
       updateSymbolTable funcName func
       return func
 
-
--- parseFunction :: MyParser Expression
--- parseFunction =
---   reserved "fun" *> spaces *> parseIdentifier >>= \funcName ->
---   char '(' *> sepBy1 (many1 letter) (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
---   Function funcName params <$> parseMultipleExpressions
-
 whiteSpace :: MyParser ()
 whiteSpace = P.whiteSpace lexer
 

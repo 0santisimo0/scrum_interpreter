@@ -35,9 +35,6 @@ fun sum(d, p) {
    } else {
         return "menor a 4"    
    }
-
-   return "waa"
-
 }
 
 
@@ -54,5 +51,4 @@ fun rest(x, p) {
 
 
 :rest(6, p)
-
-c:= 89
+:sum(5,9)

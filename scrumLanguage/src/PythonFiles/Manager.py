@@ -33,7 +33,7 @@ class Manager:
 
     def assignUserStories(self):
         if not self.team_members:
-            print("No hay miembros en el equipo para asignar historias de usuario.")
+            print("No hay miembros en el equipo para asignar US.")
             return
         
         self._shuffleAndAssignStories()
@@ -57,8 +57,7 @@ class Manager:
             UserStory("Historia 2", "Descripción de la historia 2"),
             UserStory("Historia 3", "Descripción de la historia 3"),
         ])
-        ###
-        
+
         if (self.user_stories and self.team_members):
             scrum_view = ScrumView(self)
             scrum_view.show_view()
