@@ -1,19 +1,41 @@
-from Manager import Manager
 import tkinter as tk
 
+class ScrumView:
 
-def on_button_click():
-    label.config(text="Hola jefferson \n holaa")
+    def __init__(self, manager):
+        self.manager = manager
+        self.result_label = None
 
-root = tk.Tk()
-root.title("Scrum US Distribution")
+    def assign_user_stories(self):
+        if self.manager.getTeamMembers():
+            self.manager.assignUserStories()
+            self.display_assigned_stories()
+        else:
+            self.set_label_text("Agrega miembros al equipo primero")
 
-root.geometry("650x300")
+    def display_assigned_stories(self):
+        if self.manager.getTeamMembers():
+            result_text = ""
+            for story in self.manager.user_stories:
+                result_text += str(story) + "\n"
+            self.set_label_text(result_text)    
+        else:
+            self.set_label_text("Agrega miembros al equipo primero") 
 
-label = tk.Label(root, text="Presiona el botón")
-label.pack(pady=10)
+    def set_label_text(self, message_text):
+        return self.result_label.config(text=message_text)
+    def show_view(self):
+        root = tk.Tk()
+        root.title("Scrum US Distribution")
+        root.geometry("650x300")
 
-button = tk.Button(root, text="Presionar", command=on_button_click)
-button.pack(pady=10)
+        label = tk.Label(root, text="Presiona el botón para asignar historias de usuario")
+        label.pack(pady=10)
 
-root.mainloop()
+        button = tk.Button(root, text="Asignar Historias", command=self.assign_user_stories)
+        button.pack(pady=10)
+
+        self.result_label = tk.Label(root, text="")
+        self.result_label.pack(pady=10)
+
+        root.mainloop()

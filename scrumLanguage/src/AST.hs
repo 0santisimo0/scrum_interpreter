@@ -2,6 +2,7 @@ module AST(Expression(..),
             Identifier, 
             Literal(..), 
             Role(..),
+            Parameter(..),
             Comparison(..),
             CompOperator(..),
             BinaryOperator(..),
@@ -24,12 +25,14 @@ data Literal = BooleanLiteral Bool
             | StringLiteral String
             deriving(Show, Eq)
 
+data Parameter = Parameter Identifier
+    deriving (Show, Eq)
 
 data Expression = Assign Identifier Expression
                 | Literal Literal
                 | Variable Identifier
                 | Conditional Comparison [Expression] [Expression]
-                | Function String [String] [Expression]
+                | Function String [Parameter] [Expression]
                 | BinaryExpression BinaryExpression
                 | ListExpression ListExpression
                 | ForLoopExpression ForLoop

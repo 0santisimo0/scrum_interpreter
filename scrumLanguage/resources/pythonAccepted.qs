@@ -6,7 +6,7 @@ True
 
 SM : "Santiago Caballero"
 PO : "Samuel Escalera"
-TM : "Jefferson Pelotas"
+TM : "Jefferson Viejo"
 TM : "Bryant Mayers"
 TM : "Cristiano Ronaldo"
 TM : "Ronaldiño Gaucho"
@@ -14,6 +14,7 @@ TM : "Ronaldiño Gaucho"
 
 x:= "hola"
 m:= 89
+p:= 0
 
 if (p==5) {
     6
@@ -25,22 +26,29 @@ if (p==5) {
 
 d:= "ppp"
 
-fun sum(x, y) { 
+fun sum(d, p) { 
    ñ:= 6
    78
-   d:= 54
-   d:= "sdfs"
+   x:= 54
+   if (p>=4) {
+        return "mayor o igual a 4"
+   } else {
+        return "menor a 4"    
+   }
+}
+
+
+fun rest(x, p) { 
+   ñ:= 6
+   78
+   d:= 85
    if (x>=4) {
         return "mayor o igual a 4"
    } else {
         return "menor a 4"    
    }
-
-   return "waa"
-
 }
 
 
-:sum(6, y)
-
-c:= 89
+:rest(6, p)
+:sum(5,9)

@@ -12,6 +12,7 @@ import Data.List (intercalate)
 import Control.Monad.State
 import qualified Data.Map as Map
 import Data.Functor.Identity (Identity)
+import Data.Bifunctor
 
 type SymbolTable = Map.Map String Expression
 type ContextStack = [SymbolTable]
@@ -26,7 +27,7 @@ updateSymbolTable :: String -> Expression -> MyParser ()
 updateSymbolTable var val = modifyCurrentContext (Map.insert var val)
 
 addError :: String -> MyParser ()
-addError err = modifyState (\(ctxs, errs) -> (ctxs, err : errs))
+addError err = modifyState (second (err :))
 
 hasErrors :: MyParser Bool
 hasErrors = not . null . snd <$> getState
@@ -78,16 +79,27 @@ braces :: MyParser a -> MyParser a
 braces = P.braces lexer
 
 
--- Helper function to update the symbol table in the parser state
--- updateSymbolTable :: String -> Expression -> MyParser ()
--- updateSymbolTable var val = modifyState (Map.insert var val)
-
 variableExists :: String -> MyParser Bool
 variableExists var = do
   (ctxs, _) <- getState
   case ctxs of
     [] -> return False
     (currentContext:_) -> return $ Map.member var currentContext
+
+
+variableExistsInAnyContext :: String -> MyParser Bool
+variableExistsInAnyContext var = do
+  (ctxs, _) <- getState
+  return $ any (Map.member var) ctxs
+
+
+varExistsInGlobalContext :: String -> MyParser Bool
+varExistsInGlobalContext var = do
+  (ctxs, _) <- getState
+  case reverse ctxs of
+    [] -> return False
+    (globalContext:_) -> return $ Map.member var globalContext
+
 
 pushContext :: MyParser ()
 pushContext = modifyState (\(ctx:ctxs, errs) -> (Map.empty : ctx : ctxs, errs))
@@ -99,10 +111,6 @@ modifyCurrentContext :: (SymbolTable -> SymbolTable) -> MyParser ()
 modifyCurrentContext f = modifyState (\(ctx:ctxs, errs) -> (f ctx : ctxs, errs))
 
 
-
--- variableExists :: String -> MyParser Bool
--- variableExists var = Map.member var . fst <$> getState
-
 parseLiteral :: MyParser Literal
 parseLiteral = try (FloatingPointLiteral <$> parseFloat)
       <|> (IntegerLiteral <$> parseInteger)
@@ -110,7 +118,34 @@ parseLiteral = try (FloatingPointLiteral <$> parseFloat)
       <|> (StringLiteral <$> parseStringLiteral)
 
 parseVariable :: MyParser Expression
-parseVariable = Variable <$> parseIdentifier
+parseVariable = do
+    pos <- getPosition
+    var <- parseIdentifier
+    exists <- variableExists var
+    if exists
+      then return (Variable var)
+      else do
+        let line = sourceLine pos
+        let column = sourceColumn pos
+        error ("Variable " ++ var ++ " no definido (" ++ show line ++ ", "++ show column ++")")
+
+parseParam :: MyParser Parameter
+parseParam = do
+    pos <- getPosition
+    var <- parseIdentifier
+    existsInGlobal <- varExistsInGlobalContext var
+    if existsInGlobal
+      then do
+        (ctxs, errs) <- getState
+        let globalContext = last ctxs
+        let val = globalContext Map.! var
+        modifyCurrentContext (Map.insert var val)
+        return (Parameter var)
+      else do
+        let line = sourceLine pos
+        let column = sourceColumn pos
+        error ("Parametro " ++ var ++ " no esta definido en el contexto global (" ++ show line ++ ", "++ show column ++")")
+
 
 parseAssign :: MyParser Expression
 parseAssign = do
@@ -122,13 +157,17 @@ parseAssign = do
         then do
             let line = sourceLine pos
             let column = sourceColumn pos
-            addError ("Variable " ++ var ++ " ya existe ("++ show line ++ ", "++ show column ++")")
-            error ("Variable " ++ var ++ " ya existe ("++ show line ++ ", "++ show column ++")")
-        else  getAssignParser var
-
+            let errorMsg = "Variable " ++ var ++ " ya existe (" ++ show line ++ ", " ++ show column ++ ")"
+            addError errorMsg
+            error errorMsg
+        else getAssignParser var
 
 getAssignParser :: Identifier -> MyParser Expression
-getAssignParser var = Assign var <$> parseExpression >>= \val -> updateSymbolTable var val *> pure (Assign var val)
+getAssignParser var = do
+    val <- parseExpression
+    updateSymbolTable var val
+    pure (Assign var val)
+
 
 parseBinaryOperator :: MyParser BinaryOperator
 parseBinaryOperator =
@@ -206,10 +245,17 @@ parseExpression = try parseFunction
     parseRole = Role <$> parseRoleExp
 
 parseFunctionCall :: MyParser Expression
-parseFunctionCall =
-    FunctionCall
-    <$> (char ':' *> parseIdentifier)
-    <*> (spaces *> between (char '(') (char ')') (parseExpression `sepBy` (char ',' >> spaces)))
+parseFunctionCall = do
+  _ <- char ':'
+  pos <- getPosition
+  funcName <- parseIdentifier
+  exists <- variableExists funcName
+  if not exists
+    then do
+      let line = sourceLine pos
+      let column = sourceColumn pos
+      error ("Funcion " ++ funcName ++ " no existe (" ++ show line ++ ", " ++ show column ++ ")")
+    else FunctionCall funcName <$> (spaces *> between (char '(') (char ')') (parseExpression `sepBy` (char ',' >> spaces)))
 
 parseRoleExp :: MyParser Role
 parseRoleExp = (reserved "SM" *> spaces *> char ':'  *> spaces >> ScrumMaster <$> parseStringLiteral)
@@ -238,16 +284,26 @@ parseConditional =
 
 
 parseFunction :: MyParser Expression
-parseFunction =
-  reserved "fun" *> spaces *> parseIdentifier >>= \funcName ->
-  char '(' *> sepBy1 (many1 letter) (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
-  Function funcName params <$> (pushContext *> parseMultipleExpressions <* popContext)
-
--- parseFunction :: MyParser Expression
--- parseFunction =
---   reserved "fun" *> spaces *> parseIdentifier >>= \funcName ->
---   char '(' *> sepBy1 (many1 letter) (spaces *> char ',' <* spaces) <* char ')' <* spaces <* char '{' <* spaces >>= \params ->
---   Function funcName params <$> parseMultipleExpressions
+parseFunction = do
+  reserved "fun"
+  spaces
+  pos <- getPosition
+  funcName <- parseIdentifier
+  exists <- variableExistsInAnyContext funcName
+  if exists
+    then do
+      let line = sourceLine pos
+      let column = sourceColumn pos
+      error ("Function " ++ funcName ++ " ya existe (" ++ show line ++ ", " ++ show column ++ ")")
+    else do
+      pushContext
+      params <- char '(' *> sepBy1 parseParam (spaces *> char ',' <* spaces) <* char ')'
+      spaces *> char '{' *> spaces
+      body <- parseMultipleExpressions
+      popContext
+      let func = Function funcName params body
+      updateSymbolTable funcName func
+      return func
 
 whiteSpace :: MyParser ()
 whiteSpace = P.whiteSpace lexer

@@ -36,10 +36,13 @@ generateExpression (Conditional cond ifExpr elseExpr) =
     indent (generateExpressions ifExpr) ++ "else:\n" ++
     indent (generateExpressions elseExpr)
 generateExpression (Function name params body) =
-    "def " ++ name ++ "(" ++ intercalate ", " params ++ "):\n" ++
+    "def " ++ name ++ "(" ++ intercalate ", " (map generateParam params) ++ "):\n" ++
     indent (generateExpressions body)
 generateExpression (Role r) = generateRole r
 generateExpression _ = " Error "
+
+generateParam :: Parameter -> String
+generateParam (Parameter param) = param
 
 
 generateRole :: Role -> String
@@ -70,7 +73,7 @@ indent = unlines . map ("    " ++) . lines
 
 
 generateCode :: [Expression] -> String
-generateCode expressions = generateImports ++ generateExpressions expressions
+generateCode expressions = generateImports ++ generateExpressions expressions ++ generateView
 
 generateImports :: String
 generateImports = unlines
@@ -82,3 +85,6 @@ generateImports = unlines
     , "manager = Manager()"
     , ""
     ]
+
+generateView :: String
+generateView = "\nmanager.showViewIfScrumAdded()"
