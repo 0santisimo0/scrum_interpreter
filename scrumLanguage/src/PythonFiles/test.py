@@ -51,27 +51,29 @@ def rest(x, p):
 
 rest(6, p)
 sum(5, 9)
-user_story = UserStory("POC-01")
-us = UserStory(
+user_story = UserStory(
+    "POC-01",
     "Titulo",
     UserStoryType.SPIKE,
     TeamMember("Diego"),
     "Describcion",
     3,
     "aaaa"
-)
 
+)
 manager.setUserStories([user_story])
-user_story = UserStory("US-01")
-us = UserStory(
+
+user_story = UserStory(
+    "US-01",
     "Titulo",
     UserStoryType.FEATURE,
     None,
     "Hacer el feature",
     3,
     "aaaa"
-)
 
+)
 manager.setUserStories([user_story])
+
 
 manager.showViewIfScrumAdded()

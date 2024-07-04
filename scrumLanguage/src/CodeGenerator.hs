@@ -39,7 +39,7 @@ generateExpression (Function name params body) =
     "def " ++ name ++ "(" ++ intercalate ", " (map generateParam params) ++ "):\n" ++
     indent (generateExpressions body)
 generateExpression (Role r) = generateRole r
-generateExpression (UserStory (UserStoryExpr title formatBlock)) = generateUserStory title formatBlock
+generateExpression (UserStory (UserStoryExpr id formatBlock)) = generateUserStory id formatBlock
 
 
 generateParam :: Parameter -> String
@@ -101,14 +101,12 @@ generateUserStoryType HotFix = "UserStoryType.HOTFIX"
 
 generateUserStoryFormatBlock :: UserStoryFormatBlock -> String
 generateUserStoryFormatBlock (UserStoryFormatBlock t ty ps ds et ac) = unlines
-    [ "us = UserStory("
-    , "    " ++ show t ++ ","
+    [ "    " ++ show t ++ ","
     , "    " ++ generateUserStoryType ty ++ ","
     , "    " ++ generateAssignedTo ps ++ ","
     , "    " ++ show ds ++ ","
     , "    " ++ show et ++ ","
     , "    " ++ show ac
-    , ")"
     ]
 
 generateAssignedTo :: Maybe AssignedTo -> String
@@ -118,7 +116,10 @@ generateAssignedTo (Just (ProductOwner po)) = "ProductOwner(\"" ++ po ++ "\")"
 generateAssignedTo (Just (TeamMember tm)) = "TeamMember(\"" ++ tm ++ "\")"
 
 generateUserStory :: String -> UserStoryFormatBlock -> String
-generateUserStory title formatBlock =
-    "user_story = UserStory(" ++ show title ++ ")\n" ++
-    generateUserStoryFormatBlock formatBlock ++ "\n" ++
-    "manager.setUserStories([user_story])"
+generateUserStory id formatBlock = unlines
+    [ "user_story = UserStory("
+    , "    " ++ show id ++ ","
+    , generateUserStoryFormatBlock formatBlock
+    , ")"
+    , "manager.setUserStories([user_story])"
+    ]
