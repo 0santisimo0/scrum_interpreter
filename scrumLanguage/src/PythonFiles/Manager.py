@@ -1,4 +1,3 @@
-# Manager.py
 import random
 from collections import deque
 from UserStory import UserStory, UserStoryType

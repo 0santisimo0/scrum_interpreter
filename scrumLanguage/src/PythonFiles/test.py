@@ -53,36 +53,36 @@ rest(6, p)
 sum(5, 9)
 user_story = UserStory(
     "POC-01",
-    "Titulo",
+    "Implementar Prueba de Concepto para Integracion de API Externa",
     UserStoryType.POC,
-    TeamMember("Diego"),
-    "Describcion",
+    TeamMember("Bryant Mayers"),
+    "Realizar una prueba de concepto para integrar la API externa en nuestra aplicaci\243n.",
     3,
-    "aaaa"
+    "La API externa est\225 integrada correctamente"
 
 )
 manager.addUserStory(user_story)
 
 user_story = UserStory(
     "US-01",
-    "Titulo",
+    "Desarrollar Funcionalidad de Autenticaci\243n de Usuarios",
     UserStoryType.FEATURE,
     None,
-    "Hacer el feature",
-    3,
-    "aaaa"
+    "Implementar un sistema de autenticaci\243n de usuarios que permita a los usuarios registrarse.",
+    5,
+    "Los usuarios pueden registrarse, iniciar sesi\243n y cerrar sesi\243n correctamente."
 
 )
 manager.addUserStory(user_story)
 
 user_story = UserStory(
     "US-02",
-    "Num2",
+    "Crear Sistema de Notificaciones en Tiempo Real",
     UserStoryType.FEATURE,
-    TeamMember("Samuel"),
-    "Hacer el feature",
+    TeamMember("Cristiano Ronaldo"),
+    "Desarrollar un sistema de notificaciones en tiempo real.",
     3,
-    "aaaa"
+    "El sistema de notificaciones est\225 funcionando correctamente"
 
 )
 manager.addUserStory(user_story)

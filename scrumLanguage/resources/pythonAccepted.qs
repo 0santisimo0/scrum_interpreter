@@ -54,27 +54,27 @@ fun rest(x, p) {
 :sum(5,9)
 
 US "POC-01" { 
-    T: "Titulo", 
+    T: "Implementar Prueba de Concepto para Integracion de API Externa", 
     TY: POC, 
-    PS: (TM: "Diego"), 
-    DS: "Describcion", 
+    PS: (TM: "Bryant Mayers"), 
+    DS: "Realizar una prueba de concepto para integrar la API externa en nuestra aplicación.", 
     ET: 3, 
-    AC: "aaaa"  
+    AC: "La API externa está integrada correctamente"  
     }
 
 US "US-01" { 
-    T: "Titulo", 
+    T: "Desarrollar Funcionalidad de Autenticación de Usuarios", 
     TY: Feature, 
-    DS: "Hacer el feature", 
-    ET: 3, 
-    AC: "aaaa"  
+    DS: "Implementar un sistema de autenticación de usuarios que permita a los usuarios registrarse.", 
+    ET: 5, 
+    AC: "Los usuarios pueden registrarse, iniciar sesión y cerrar sesión correctamente." 
     }
 
 US "US-02" { 
-    T: "Num2", 
+    T: "Crear Sistema de Notificaciones en Tiempo Real", 
     TY: Feature,
-    PS: (TM: "Samuel"),
-    DS: "Hacer el feature", 
+    PS: (TM: "Diego Figueroa"),
+    DS: "Desarrollar un sistema de notificaciones en tiempo real.", 
     ET: 3, 
-    AC: "aaaa"  
+    AC: "El sistema de notificaciones está funcionando correctamente" 
     }

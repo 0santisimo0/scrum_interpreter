@@ -23,4 +23,12 @@ class UserStory:
 
     def __str__(self):
         assigned_str = f"Asignado a: {self.assigned_to}" if self.assigned_to else "Sin asignar"
-        return f"ID: {self.id}, Título: {self.title}, Tipo: {self.user_story_type.name}, {assigned_str}, Descripción: {self.description}, Estimación: {self.estimation}, Aceptación: {self.acceptance}"
+        return (
+            f"ID: {self.id}\n"
+            f"Título: {self.title}\n"
+            f"Tipo: {self.user_story_type.name}\n"
+            f"{assigned_str}\n"
+            f"Descripción: {self.description}\n"
+            f"Estimación: {self.estimation}\n"
+            f"Aceptación: {self.acceptance}\n"
+        )
