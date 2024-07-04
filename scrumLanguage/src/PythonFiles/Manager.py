@@ -44,14 +44,14 @@ class Manager:
         queue = deque(self.team_members)
 
         for i, story in enumerate(self.user_stories):
-            assigned_member = queue[i % len(queue)] 
-            story.assign_member(assigned_member)
+            if story.assigned_to is None:
+                assigned_member = queue[i % len(queue)] 
+                story.assign_member(assigned_member)
             
     def addUserStory(self, user_story):
         self.user_stories.append(user_story)
 
     def showViewIfScrumAdded(self):
-
         if self.user_stories and self.team_members:
             scrum_view = ScrumView(self)
             scrum_view.show_view()
