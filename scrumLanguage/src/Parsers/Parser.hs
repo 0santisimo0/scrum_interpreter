@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use <$>" #-}
 module Parsers.Parser (
     parseProgram, ParserState
     ) where
@@ -194,18 +192,7 @@ parseBinaryExpression = do
       <|> (Right <$> parseVarIdentifier)
 
     parseVarIdentifier :: MyParser Identifier
-    parseVarIdentifier = do
-      pos <- getPosition
-      var <- parseIdentifier
-      exists <- variableExists var
-      if exists
-        then return var
-        else do
-          let line = sourceLine pos
-          let column = sourceColumn pos
-          let errorMsg = "Variable " ++ var ++ " no definida (" ++ show line ++ ", " ++ show column ++ ")"
-          addError errorMsg
-          error errorMsg
+    parseVarIdentifier = parseIdentifier
 
 
 parseElement :: MyParser Literal
@@ -360,10 +347,10 @@ parseUserStoryFormatBlock :: MyParser UserStoryFormatBlock
 parseUserStoryFormatBlock = UserStoryFormatBlock
     <$> (reserved "T" *> char ':' *> whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
     <*> (reserved "TY" *> char ':' *>  whiteSpace *> parseUserStoryType <* char ',' <* whiteSpace)
-    <*> (reserved "PS" *> char ':' *> whiteSpace *> char '(' *>   parseRoleExp <* char ')' <* char ','<* whiteSpace)
-    <*> (reserved "DS" *> char ':' *>  whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
-    <*> (reserved "ET" *> char ':' *>  whiteSpace *> parseInteger<* char ',' <* whiteSpace)
-    <*> (reserved "AC" *> char ':' *>  whiteSpace *> parseStringLiteral)
+    <*> (optionMaybe (reserved "PS" *> char ':' *> whiteSpace *> char '(' *> parseRoleExp <* char ')' <* char ',' <* whiteSpace))
+    <*> (reserved "DS" *> char ':' *> whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
+    <*> (reserved "ET" *> char ':' *> whiteSpace *> parseInteger <* char ',' <* whiteSpace)
+    <*> (reserved "AC" *> char ':' *> whiteSpace *> parseStringLiteral)
 
 parseUserStory :: MyParser Expression
 parseUserStory =

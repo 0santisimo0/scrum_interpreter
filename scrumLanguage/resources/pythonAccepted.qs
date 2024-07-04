@@ -52,3 +52,20 @@ fun rest(x, p) {
 
 :rest(6, p)
 :sum(5,9)
+
+US "POC-01" { 
+    T: "Titulo", 
+    TY: Spike, 
+    PS: (TM: "Diego"), 
+    DS: "Describcion", 
+    ET: 3, 
+    AC: "aaaa"  
+    }
+
+US "US-01" { 
+    T: "Titulo", 
+    TY: Feature, 
+    DS: "Hacer el feature", 
+    ET: 3, 
+    AC: "aaaa"  
+    }

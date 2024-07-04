@@ -23,7 +23,7 @@ generateBinaryOperator Div = "/"
 generateExpression :: Expression -> String
 generateExpression (Literal l) = generateLiteral l
 generateExpression (Variable v) = v
-generateExpression (FunctionCall name params) = "print(" ++ name ++ "(" ++ intercalate ", " (map generateExpression params) ++ "))"
+generateExpression (FunctionCall name params) = name ++ "(" ++ intercalate ", " (map generateExpression params) ++ ")"
 generateExpression (Assign v e) = v ++ " = " ++ generateExpression e
 generateExpression (ListExpression (ListExpr id elems)) =
     id ++ " = [" ++ unwords (map generateLiteral elems) ++ "]"
@@ -32,14 +32,15 @@ generateExpression (ForLoopExpression (ForLoop var iterable body)) =
     indent (generateExpressions body)
 generateExpression (ReturnStatement e) = "return " ++ generateExpression e
 generateExpression (Conditional cond ifExpr elseExpr) =
-    "\nif " ++ generateComparison cond ++ ":\n" ++
+    "if " ++ generateComparison cond ++ ":\n" ++
     indent (generateExpressions ifExpr) ++ "else:\n" ++
     indent (generateExpressions elseExpr)
 generateExpression (Function name params body) =
     "def " ++ name ++ "(" ++ intercalate ", " (map generateParam params) ++ "):\n" ++
     indent (generateExpressions body)
 generateExpression (Role r) = generateRole r
-generateExpression _ = " Error "
+generateExpression (UserStory (UserStoryExpr title formatBlock)) = generateUserStory title formatBlock
+
 
 generateParam :: Parameter -> String
 generateParam (Parameter param) = param
@@ -81,6 +82,7 @@ generateImports = unlines
     , "from ScrumMaster import ScrumMaster"
     , "from ProductOwner import ProductOwner"
     , "from Manager import Manager"
+    , "from UserStory import UserStory, UserStoryType"
     , ""
     , "manager = Manager()"
     , ""
@@ -88,3 +90,35 @@ generateImports = unlines
 
 generateView :: String
 generateView = "\nmanager.showViewIfScrumAdded()"
+
+
+generateUserStoryType :: UserStoryType -> String
+generateUserStoryType Feature = "UserStoryType.FEATURE"
+generateUserStoryType Spike = "UserStoryType.SPIKE"
+generateUserStoryType POC = "UserStoryType.POC"
+generateUserStoryType Fix = "UserStoryType.FIX"
+generateUserStoryType HotFix = "UserStoryType.HOTFIX"
+
+generateUserStoryFormatBlock :: UserStoryFormatBlock -> String
+generateUserStoryFormatBlock (UserStoryFormatBlock t ty ps ds et ac) = unlines
+    [ "us = UserStory("
+    , "    " ++ show t ++ ","
+    , "    " ++ generateUserStoryType ty ++ ","
+    , "    " ++ generateAssignedTo ps ++ ","
+    , "    " ++ show ds ++ ","
+    , "    " ++ show et ++ ","
+    , "    " ++ show ac
+    , ")"
+    ]
+
+generateAssignedTo :: Maybe AssignedTo -> String
+generateAssignedTo Nothing = "None"
+generateAssignedTo (Just (ScrumMaster sm)) = "ScrumMaster(\"" ++ sm ++ "\")"
+generateAssignedTo (Just (ProductOwner po)) = "ProductOwner(\"" ++ po ++ "\")"
+generateAssignedTo (Just (TeamMember tm)) = "TeamMember(\"" ++ tm ++ "\")"
+
+generateUserStory :: String -> UserStoryFormatBlock -> String
+generateUserStory title formatBlock =
+    "user_story = UserStory(" ++ show title ++ ")\n" ++
+    generateUserStoryFormatBlock formatBlock ++ "\n" ++
+    "manager.setUserStories([user_story])"
