@@ -121,5 +121,5 @@ generateUserStory id formatBlock = unlines
     , "    " ++ show id ++ ","
     , generateUserStoryFormatBlock formatBlock
     , ")"
-    , "manager.setUserStories([user_story])"
+    , "manager.addUserStory(user_story)"
     ]

@@ -54,14 +54,14 @@ sum(5, 9)
 user_story = UserStory(
     "POC-01",
     "Titulo",
-    UserStoryType.SPIKE,
+    UserStoryType.POC,
     TeamMember("Diego"),
     "Describcion",
     3,
     "aaaa"
 
 )
-manager.setUserStories([user_story])
+manager.addUserStory(user_story)
 
 user_story = UserStory(
     "US-01",
@@ -73,7 +73,19 @@ user_story = UserStory(
     "aaaa"
 
 )
-manager.setUserStories([user_story])
+manager.addUserStory(user_story)
+
+user_story = UserStory(
+    "US-02",
+    "Num2",
+    UserStoryType.FEATURE,
+    TeamMember("Samuel"),
+    "Hacer el feature",
+    3,
+    "aaaa"
+
+)
+manager.addUserStory(user_story)
 
 
 manager.showViewIfScrumAdded()

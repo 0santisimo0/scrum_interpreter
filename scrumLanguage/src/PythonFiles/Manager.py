@@ -1,6 +1,7 @@
+# Manager.py
 import random
 from collections import deque
-from UserStory import UserStory
+from UserStory import UserStory, UserStoryType
 from TeamMember import TeamMember
 from ScrumMaster import ScrumMaster
 from ProductOwner import ProductOwner
@@ -44,20 +45,13 @@ class Manager:
 
         for i, story in enumerate(self.user_stories):
             assigned_member = queue[i % len(queue)] 
-            story.assignMember(assigned_member)
+            story.assign_member(assigned_member)
             
-    def setUserStories(self, user_stories):
-        self.user_stories = user_stories
+    def addUserStory(self, user_story):
+        self.user_stories.append(user_story)
 
     def showViewIfScrumAdded(self):
 
-        ##TODO:Errase this entire section to generate US, inside pythonAccepted.qs
-        self.setUserStories([
-            UserStory("Historia 1", "Descripción de la historia 1"),
-            UserStory("Historia 2", "Descripción de la historia 2"),
-            UserStory("Historia 3", "Descripción de la historia 3"),
-        ])
-
-        if (self.user_stories and self.team_members):
+        if self.user_stories and self.team_members:
             scrum_view = ScrumView(self)
             scrum_view.show_view()

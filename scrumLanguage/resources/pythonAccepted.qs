@@ -55,7 +55,7 @@ fun rest(x, p) {
 
 US "POC-01" { 
     T: "Titulo", 
-    TY: Spike, 
+    TY: POC, 
     PS: (TM: "Diego"), 
     DS: "Describcion", 
     ET: 3, 
@@ -65,6 +65,15 @@ US "POC-01" {
 US "US-01" { 
     T: "Titulo", 
     TY: Feature, 
+    DS: "Hacer el feature", 
+    ET: 3, 
+    AC: "aaaa"  
+    }
+
+US "US-02" { 
+    T: "Num2", 
+    TY: Feature,
+    PS: (TM: "Samuel"),
     DS: "Hacer el feature", 
     ET: 3, 
     AC: "aaaa"  
