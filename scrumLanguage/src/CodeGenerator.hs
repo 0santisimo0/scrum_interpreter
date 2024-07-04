@@ -29,7 +29,7 @@ generateExpression (ListExpression (ListExpr id elems)) =
     id ++ " = [" ++ unwords (map generateLiteral elems) ++ "]"
 generateExpression (ForLoopExpression (ForLoop var iterable body)) =
     "for " ++ generateExpression var ++ " in " ++ generateExpression iterable ++ ":\n" ++
-    indent (generateExpression body)
+    indent (generateExpressions body)
 generateExpression (ReturnStatement e) = "return " ++ generateExpression e
 generateExpression (Conditional cond ifExpr elseExpr) =
     "\nif " ++ generateComparison cond ++ ":\n" ++
