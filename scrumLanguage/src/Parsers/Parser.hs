@@ -177,19 +177,23 @@ parseBinaryOperator =
   <|> (Div <$ reservedOp "/")
 
 parseBinaryExpression :: MyParser Expression
-parseBinaryExpression =
-    try (BinaryExpression <$>
-        (BinExprLit <$>
-            (try (FloatingPointLiteral <$> parseFloat)
-            <|> try (IntegerLiteral <$> parseInteger))
-        <*> parseBinaryOperator
-        <*> (try (FloatingPointLiteral <$> parseFloat)
-            <|> try (IntegerLiteral <$> parseInteger))))
-    <|> try (BinaryExpression <$>
-        (BinExprId <$>
-            parseIdentifier
-        <*> parseBinaryOperator
-        <*> parseIdentifier))
+parseBinaryExpression = do
+  lhs <- parseTerm
+  op <- parseBinaryOperator
+  rhs <- parseTerm
+  return $ case (lhs, rhs) of
+    (Left lit1, Left lit2) -> BinaryExpression (BinExprLit lit1 op lit2)
+    (Right var1, Right var2) -> BinaryExpression (BinExprId var1 op var2)
+    _ -> error "Both sides of the binary expression must be either literals or identifiers"
+  where
+    parseTerm :: MyParser (Either Literal Identifier)
+    parseTerm = 
+          (Left <$> parseLiteral)
+      <|> (Right <$> parseVarIdentifier)
+
+    parseVarIdentifier :: MyParser Identifier
+    parseVarIdentifier = parseIdentifier
+
 
 parseElement :: MyParser Literal
 parseElement = parseLiteral
@@ -221,11 +225,17 @@ parseListExpression =
 parseIterable :: MyParser Expression
 parseIterable = try parseListExpression <|> parseVariable
 
+
 parseForLoop :: MyParser Expression
-parseForLoop =
-  reserved "for" *>
-  parens ((,) <$> parseAssign <*> (reserved "in" *> parseIterable)) >>= \(var, iterable) ->
-  ForLoopExpression <$> (ForLoop var iterable <$> braces parseExpression)
+parseForLoop = do
+  reserved "for"
+  (varAssign, iterable) <- parens $ do
+    varAssign <- parseAssign
+    reserved "in"
+    iterable <- parseIterable
+    return (varAssign, iterable)
+  body <- braces parseMultipleExpressions
+  return $ ForLoopExpression (ForLoop varAssign iterable body)
 
 parseExpression :: MyParser Expression
 parseExpression = try parseFunction
@@ -277,10 +287,24 @@ parseReturn :: MyParser Expression
 parseReturn = ReturnStatement <$> (reserved "return" *> spaces *> parseExpression)
 
 parseConditional :: MyParser Expression
-parseConditional =
-  reserved "if" *> spaces *> char '(' *> parseComparison <* char ')' <* spaces <* char '{' <* spaces >>= \condition ->
-  parseMultipleExpressions <* spaces <* string "else" <* spaces <* char '{' <* spaces >>= \ifExpr ->
-  Conditional condition ifExpr <$> parseMultipleExpressions
+parseConditional = do
+  reserved "if"
+  spaces
+  char '('
+  condition <- parseComparison
+  char ')'
+  spaces
+  char '{'
+  spaces
+  ifExpr <- parseMultipleExpressions
+  spaces
+  string "else"
+  spaces
+  char '{'
+  spaces
+  elseExpr <- parseMultipleExpressions
+  return $ Conditional condition ifExpr elseExpr
+
 
 
 parseFunction :: MyParser Expression
@@ -323,10 +347,10 @@ parseUserStoryFormatBlock :: MyParser UserStoryFormatBlock
 parseUserStoryFormatBlock = UserStoryFormatBlock
     <$> (reserved "T" *> char ':' *> whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
     <*> (reserved "TY" *> char ':' *>  whiteSpace *> parseUserStoryType <* char ',' <* whiteSpace)
-    <*> (reserved "PS" *> char ':' *> whiteSpace *> char '(' *>   parseRoleExp <* char ')' <* char ','<* whiteSpace)
-    <*> (reserved "DS" *> char ':' *>  whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
-    <*> (reserved "ET" *> char ':' *>  whiteSpace *> parseInteger<* char ',' <* whiteSpace)
-    <*> (reserved "AC" *> char ':' *>  whiteSpace *> parseStringLiteral)
+    <*> (optionMaybe (reserved "PS" *> char ':' *> whiteSpace *> char '(' *> parseRoleExp <* char ')' <* char ',' <* whiteSpace))
+    <*> (reserved "DS" *> char ':' *> whiteSpace *> parseStringLiteral <* char ',' <* whiteSpace)
+    <*> (reserved "ET" *> char ':' *> whiteSpace *> parseInteger <* char ',' <* whiteSpace)
+    <*> (reserved "AC" *> char ':' *> whiteSpace *> parseStringLiteral)
 
 parseUserStory :: MyParser Expression
 parseUserStory =
