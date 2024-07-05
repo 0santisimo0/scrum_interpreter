@@ -3,6 +3,8 @@ This project implements a parser in Haskell for a domain specific language (DSL)
 which is then translated into Python.
 The parser is designed to read and parse code written in "scrumLanguage", and generate Python.
 
+[More Info](https://docs.google.com/document/d/1wz1SiQ_pU8Zcdr-ryYUJz2p4wXccoykUGnx2u5kxpqk/edit?usp=sharing)
+
 ## Project Description
 This project consists of several modules, each one in charge of a specific part of the parsing and translation process:
 

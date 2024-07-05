@@ -26,10 +26,10 @@ generateExpression (Variable v) = v
 generateExpression (FunctionCall name params) = name ++ "(" ++ intercalate ", " (map generateExpression params) ++ ")"
 generateExpression (Assign v e) = v ++ " = " ++ generateExpression e
 generateExpression (ListExpression (ListExpr id elems)) =
-    id ++ " = [" ++ unwords (map generateLiteral elems) ++ "]"
+    id ++ " = [" ++ intercalate ", " (map generateLiteral elems) ++ "]"
 generateExpression (ForLoopExpression (ForLoop var iterable body)) =
-    "for " ++ generateExpression var ++ " in " ++ generateExpression iterable ++ ":\n" ++
-    indent (generateExpressions body)
+    "for " ++ var ++ " in " ++ generateExpression iterable ++ ":\n" ++
+    indent (generateExpression body)
 generateExpression (ReturnStatement e) = "return " ++ generateExpression e
 generateExpression (Conditional cond ifExpr elseExpr) =
     "if " ++ generateComparison cond ++ ":\n" ++
@@ -40,7 +40,7 @@ generateExpression (Function name params body) =
     indent (generateExpressions body)
 generateExpression (Role r) = generateRole r
 generateExpression (UserStory (UserStoryExpr id formatBlock)) = generateUserStory id formatBlock
-
+generateExpression _ = "Error"
 
 generateParam :: Parameter -> String
 generateParam (Parameter param) = param

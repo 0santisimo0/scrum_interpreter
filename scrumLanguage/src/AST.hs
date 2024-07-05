@@ -12,7 +12,8 @@ module AST(Expression(..),
             UserStoryType(..),
             UserStoryFormatBlock(..),
             UserStory(..),
-            AssignedTo) 
+            AssignedTo,
+            UserStoryID) 
         where 
 
 data Program = Either String Expression deriving(Show, Eq)
@@ -69,7 +70,7 @@ data BinaryOperator = Add
 data ListExpression = ListExpr Identifier [Literal]
                     deriving (Show, Eq)
 
-data ForLoop = ForLoop Expression Expression [Expression]
+data ForLoop = ForLoop Identifier Expression Expression
                 deriving (Show, Eq)
 
 data Role = ScrumMaster String

@@ -11,6 +11,19 @@ import CodeGenerator
 
 someFunc :: IO ()
 someFunc = do
+
+    usExample <- readFile "./resources/UserStory.qs"
+
+    let parseResultUS = runParser parseProgram initialState "UserStory.qs" usExample
+
+    case parseResultUS of
+        Left err -> putStrLn $ "Error de parsing: " ++ show err
+        Right expressions -> do
+            print expressions
+            let pythonCode = generateCode expressions
+            writeFile "src/PythonFiles/testUS.py" pythonCode
+            putStrLn "Generated testUS.py"
+
     completeExample <- readFile "./resources/pythonAccepted.qs"
 
     let parseResult = runParser parseProgram initialState "pythonAccepted.qs" completeExample

@@ -16,11 +16,14 @@ expression ::= assign
         | literal
         | variable
         | conditional
+        | function
         | binary_expression
         | list
         | for_loop
         | user_story 
         | role
+        | returnStatement
+        | functionCall
         
 assign ::= identifier ":=" expression
 
@@ -34,10 +37,11 @@ comparison_operator ::= "==" | "/=" | "<" | ">" | "<=" | ">="
 comparison ::= expression comparison_operator expression
 
 // Condicional
-conditional ::= "if" "(" comparison ")" "{" expression "}" "else" "{" expression "}"
+conditional ::= "if" "(" comparison ")" "{" [expression] "}" "else" "{" expression "}"
 
 // Binary Expression
 binary_expression ::= num binary_operator num
+                | identifier binary_operator identifier
 binary_operator ::= "+"
             | "-"
             | "*"
@@ -47,7 +51,7 @@ list ::= identifier "<" element ("," element)* ">"
 element ::= literal
 
 //Loop
-for_loop ::= "for" "(" assign "in" iterable ")" "{" expression "}"
+for_loop ::= "for" "(" identifier "in" iterable ")" "{" expression "}"
 iterable ::= list
 
 //Roles
