@@ -6,51 +6,25 @@ from UserStory import UserStory, UserStoryType
 
 manager = Manager()
 
-12
-12.3
-True
-"Hola"
+intList = [10, 11, 12]
+floatList = [10.3, 11.2, 12.4]
+booleanLIst = [True, False]
+stringList = ["Hola", "Mundo"]
+yList = [1, 2, 3]
+for j in yList:
+    z = 12
+
 sm = ScrumMaster("Santiago Caballero") 
 manager.setScrumMaster(sm)
 po = ProductOwner("Samuel Escalera") 
 manager.setProductOwner(sm)
-manager.addTeamMember(TeamMember("Jefferson Viejo"))
+manager.addTeamMember(TeamMember("Jefferson Coronel"))
 manager.addTeamMember(TeamMember("Bryant Mayers"))
 manager.addTeamMember(TeamMember("Cristiano Ronaldo"))
 manager.addTeamMember(TeamMember("Ronaldiño Gaucho"))
-x = "hola"
-m = 89
-p = 0
-if p == 5:
-    6
-    t = "watafac"
-else:
-    1
-    "watafac"
-
-d = "ppp"
-def sum(d, p):
-    ñ = 6
-    78
-    x = 54
-    if p >= 4:
-        return "mayor o igual a 4"
-    else:
-        return "menor a 4"
-    
-
-def rest(x, p):
-    ñ = 6
-    78
-    d = 85
-    if x >= 4:
-        return "mayor o igual a 4"
-    else:
-        return "menor a 4"
-    
-
-rest(6, p)
-sum(5, 9)
+manager.addTeamMember(TeamMember("Diego Figueroa"))
+manager.addTeamMember(TeamMember("Jorge Heredia"))
+manager.addTeamMember(TeamMember("Henry Cavill"))
 user_story = UserStory(
     "POC-01",
     "Implementar Prueba de Concepto para Integracion de API Externa",
@@ -83,6 +57,30 @@ user_story = UserStory(
     "Desarrollar un sistema de notificaciones en tiempo real.",
     3,
     "El sistema de notificaciones est\225 funcionando correctamente"
+
+)
+manager.addUserStory(user_story)
+
+user_story = UserStory(
+    "US-03",
+    "Implementar Funcionalidad de Carrito de Compras",
+    UserStoryType.FEATURE,
+    None,
+    "Desarrollar un carrito de compras que permita a los usuarios agregar y eliminar productos.",
+    4,
+    "Los usuarios pueden agregar productos al carrito, eliminar productos del carrito y ver el resumen de la compra."
+
+)
+manager.addUserStory(user_story)
+
+user_story = UserStory(
+    "POC-02",
+    "Evaluar Integraci\243n de Servicio de Mapas en la Aplicaci\243n",
+    UserStoryType.POC,
+    TeamMember("Cristiano Ronaldo"),
+    "Realizar una evaluaci\243n para integrar un servicio de mapas en la aplicaci\243n m\243vil.",
+    2,
+    "Se eval\250an las ventajas y desventajas de integrar el servicio de mapas y se concluye con una decisi\243n informada."
 
 )
 manager.addUserStory(user_story)

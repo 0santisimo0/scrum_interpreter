@@ -184,57 +184,58 @@ parseBinaryExpression = do
   return $ case (lhs, rhs) of
     (Left lit1, Left lit2) -> BinaryExpression (BinExprLit lit1 op lit2)
     (Right var1, Right var2) -> BinaryExpression (BinExprId var1 op var2)
-    _ -> error "Both sides of the binary expression must be either literals or identifiers"
+    _ -> error "Los valores a comparar tienen que ser numeros o variables"
   where
     parseTerm :: MyParser (Either Literal Identifier)
-    parseTerm = 
+    parseTerm =
           (Left <$> parseLiteral)
-      <|> (Right <$> parseVarIdentifier)
+      <|> (Right <$> parseIdentifier)
 
-    parseVarIdentifier :: MyParser Identifier
-    parseVarIdentifier = parseIdentifier
 
 
 parseElement :: MyParser Literal
 parseElement = parseLiteral
 
-sameType :: [Literal] -> Bool
-sameType [] = True
-sameType (x:xs) = all ((== getType x) . getType) xs
-  where
-    getType :: Literal -> String
-    getType (BooleanLiteral _) = "Boolean"
-    getType (IntegerLiteral _) = "Integer"
-    getType (FloatingPointLiteral _) = "Float"
-    getType (StringLiteral _) = "String"
-
 parseListExpression :: MyParser Expression
-parseListExpression =
-  (ListExpr <$>
-    parseIdentifier <*
-    reservedOp "<" <*>
-    (parseElement `sepBy` reservedOp ",") <*
-    reservedOp ">"
-  ) >>= \listExpr ->
-  if sameType (getElements listExpr)
-    then return (ListExpression listExpr)
+parseListExpression = do
+  listName <- parseIdentifier
+  reservedOp "<"
+  elements <- parseElement `sepBy` reservedOp ","
+  reservedOp ">"
+  if sameType elements
+    then do
+      updateSymbolTable listName (ListExpression (ListExpr listName elements))
+      return (ListExpression (ListExpr listName elements))
     else fail "All elements in the list must be of the same type"
   where
-    getElements (ListExpr _ elems) = elems
+    sameType :: [Literal] -> Bool
+    sameType [] = True
+    sameType (x:xs) = all ((== getType x) . getType) xs
+      where
+        getType :: Literal -> String
+        getType (BooleanLiteral _) = "Boolean"
+        getType (IntegerLiteral _) = "Integer"
+        getType (FloatingPointLiteral _) = "Float"
+        getType (StringLiteral _) = "String"
 
 parseIterable :: MyParser Expression
 parseIterable = try parseListExpression <|> parseVariable
+
 
 
 parseForLoop :: MyParser Expression
 parseForLoop = do
   reserved "for"
   (varAssign, iterable) <- parens $ do
-    varAssign <- parseAssign
+    varAssign <- parseIdentifier
     reserved "in"
     iterable <- parseIterable
     return (varAssign, iterable)
-  body <- braces parseMultipleExpressions
+  char '{'
+  whiteSpace
+  body <- parseExpression
+  whiteSpace
+  char '}'
   return $ ForLoopExpression (ForLoop varAssign iterable body)
 
 parseExpression :: MyParser Expression
@@ -302,8 +303,7 @@ parseConditional = do
   spaces
   char '{'
   spaces
-  elseExpr <- parseMultipleExpressions
-  return $ Conditional condition ifExpr elseExpr
+  Conditional condition ifExpr <$> parseMultipleExpressions
 
 
 
@@ -353,12 +353,24 @@ parseUserStoryFormatBlock = UserStoryFormatBlock
     <*> (reserved "AC" *> char ':' *> whiteSpace *> parseStringLiteral)
 
 parseUserStory :: MyParser Expression
-parseUserStory =
-    UserStory <$> ( reserved "US" *>
-        ( UserStoryExpr
-        <$>parseStringLiteral
-        <*> (char '{' *> whiteSpace *>  parseUserStoryFormatBlock <* whiteSpace <* char '}'
-        )))
+parseUserStory = do
+  reserved "US"
+  userStoryID <- parseStringLiteral
+  existing <- variableExistsInAnyContext userStoryID
+  if existing
+    then do
+      pos <- getPosition
+      let line = sourceLine pos
+      let column = sourceColumn pos
+      let errorMsg = "User Story con ID " ++ userStoryID ++ " ya existe (" ++ show line ++ ", " ++ show column ++ ")"
+      addError errorMsg
+      error errorMsg
+    else do
+      formatBlock <- char '{' *> whiteSpace *> parseUserStoryFormatBlock <* whiteSpace <* char '}'
+      let userStoryExpr = UserStoryExpr userStoryID formatBlock
+      let userStory = UserStory userStoryExpr
+      updateSymbolTable userStoryID userStory
+      return userStory
 
 
 parseProgram :: MyParser [Expression]
