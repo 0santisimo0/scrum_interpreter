@@ -28,7 +28,7 @@ class ScrumView:
     def show_view(self):
         root = tk.Tk()
         root.title("Scrum US Distribution")
-        root.geometry("650x720")
+        root.geometry("650x820")
 
         label = tk.Label(root, text="Presiona el botón para asignar historias de usuario")
         label.pack(pady=10)
